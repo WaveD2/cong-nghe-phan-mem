@@ -3,6 +3,7 @@ import IKafka from "../types/interface/IKafka";
 import { TOPIC_TYPE, messagetype, UserEvent } from "../types/kafkaTypes";
 
 const KAFKA_CLIENT_ID = "user-service";
+//localhost:9092
 const KAFKA_BROKERS = ["kafka:29092"];
 
 class MessageBroker implements IKafka {

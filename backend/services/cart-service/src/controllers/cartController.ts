@@ -37,6 +37,10 @@ class CartController {
         return res.status(400).json({ message: "Sản phẩm không tồn tại" });
       }
 
+      if(product.stock < quantity) {
+        return res.status(400).json({ message: "Số lượng đặt hàng quá số lượng trong kho" });
+      }
+
       const userId = req.user;
 
       const updateCart = await this.cartModel.findOneAndUpdate(
