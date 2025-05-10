@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import ICart from "../types/interface/ICart";
-
+// file định nghĩa cấu trúc dữ liệu cho cơ sở dữ liệu
 const cartSchema = new Schema<ICart>(
   {
     userId: {

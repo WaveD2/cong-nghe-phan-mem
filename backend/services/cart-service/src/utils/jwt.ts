@@ -2,6 +2,7 @@ import { jwtVerify } from "jose";
 import jwt from "jsonwebtoken"
 import jwtPayload from "../types/jwt";
 
+// tạo token bằng jwt
 class Jwt {
   private secret: string;
 

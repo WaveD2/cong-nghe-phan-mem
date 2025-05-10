@@ -3,7 +3,9 @@ import IKafka from "../types/interface/IKafka";
 import { TOPIC_TYPE, messageType } from "../types/kafkaType";
 import { Event } from "../types/events";
 
+// Kafka Config
 const KAFKA_CLIENT_ID = "cart-service";
+//localhost:9092
 const KAFKA_BROKERS = ["kafka:29092"];
 
 class MessageBroker implements IKafka {
@@ -11,6 +13,7 @@ class MessageBroker implements IKafka {
   private producer: Producer;
 
   constructor() {
+  // kết nối
     this.kafka = new Kafka({
       clientId: KAFKA_CLIENT_ID,
       brokers: KAFKA_BROKERS,
@@ -33,8 +36,7 @@ class MessageBroker implements IKafka {
     }
   }
 
-  //  Publish Kafka Fun :-
-
+  // đăng ký envent
   async publish(
     topic: TOPIC_TYPE,
     message: messageType,
@@ -46,8 +48,7 @@ class MessageBroker implements IKafka {
     });
   }
 
-  //  Subscribe Kafka Fun :-
-
+  //  đăng ký kênh
   async subscribe(
     topic: TOPIC_TYPE,
     groupId: string,

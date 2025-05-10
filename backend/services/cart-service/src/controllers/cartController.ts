@@ -8,6 +8,7 @@ import Cart from "../models/cartModel";
 import MessageBroker from "../utils/messageBroker";
 import { Event } from "../types/events";
 
+// file xử lý logic của server
 class CartController {
   private productModel: Model<IProduct>;
   private cartModel: Model<ICart>;
@@ -19,6 +20,7 @@ class CartController {
     this.kafka = new MessageBroker();
   }
 
+  // tạo giỏ hàng
   async addCart(req: AuthRequest, res: Response): Promise<any> {
     try {
       const { id, quantity } = req.body;
@@ -42,14 +44,15 @@ class CartController {
       }
 
       const userId = req.user;
-
+      //tìm kiếm giỏ hàng
       const updateCart = await this.cartModel.findOneAndUpdate(
         { userId: userId, "items.productId": id },
         { $set: { "items.$.quantity": quantity } },
         { new: true }
       );
-      // chưa có giỏ hàng
+      // nếu giỏ hàng tồn tại rồi thì mình cập nhật
       if (updateCart) {
+        // gửi thông báo cho các service khác biết để đồng bộ dữ liệu
         await this.kafka.publish(
           "Cart-Topic",
           { data: updateCart },
@@ -64,7 +67,7 @@ class CartController {
           { $push: { items: { productId: id, quantity: quantity } } },
           { new: true, upsert: true }
         );
-
+        // gửi thông báo cho các service khác biết để đồng bộ dữ liệu
         await this.kafka.publish("Cart-Topic", { data: newCart }, Event.UPSERT);
         return res
           .status(200)
@@ -76,6 +79,8 @@ class CartController {
     }
   }
 
+  // lấy danh sách giỏ hàng
+
   async getCart(req: AuthRequest, res: Response): Promise<any> {
     try {
       const getCart = await this.cartModel
@@ -86,6 +91,7 @@ class CartController {
       throw new Error("Lỗi không có giỏ hàng");
     }
   }
+  // xóa sản phẩm trong giỏ hàng
 
   async removeCart(req: AuthRequest, res: Response): Promise<any> {
     try {
@@ -105,6 +111,7 @@ class CartController {
         { new: true }
       );
       if (cartRemove) {
+        // gửi thông báo cho các service khác biết xóa giỏ hàng để đồng bộ dữ liệu
         await this.kafka.publish(
           "Cart-Topic",
           { data: cartRemove },

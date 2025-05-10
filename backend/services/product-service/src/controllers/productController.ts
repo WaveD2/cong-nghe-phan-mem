@@ -13,7 +13,7 @@ class ProductController {
     this.ProductModel = Product;
     this.kafka = new MessageBroker();
   }
-
+  // tạo sản phẩm
   async addProduct(req: Request, res: Response): Promise<void> {
     try {
       const { name, description, price, stock } = req.body;
@@ -56,7 +56,7 @@ class ProductController {
 
     }
   }
-
+  // chỉnh sửa sản phẩm
   async editProduct(req: Request, res: Response): Promise<void> {
     try {
       const { name, description, price, stock } = req.body;
@@ -99,7 +99,7 @@ class ProductController {
 
     }
   }
-
+  // xóa sản phẩm
   async deleteProduct(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
@@ -124,10 +124,27 @@ class ProductController {
       return
     }
   }
+  // chi tiết sản phẩm
   async detailProduct(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
       const data = await this.ProductModel.findOne({ _id: id });
+      if(!data) {
+         res.status(404).json({ message: "Sản phẩm không tồn tại" });
+         return
+      }
+        res.status(200).json({ data });
+        return
+    } catch (error) {
+      res.status(400).json({ message: "Somthing Went Wrong..." });
+      return
+    }
+  }
+  // danh sách sản phẩm
+  async listProduct(req: Request, res: Response): Promise<void> {
+    try {
+      const {limit = 10} = req.query
+      const data = await this.ProductModel.find().limit(Number(limit));
       if(!data) {
          res.status(404).json({ message: "Sản phẩm không tồn tại" });
          return

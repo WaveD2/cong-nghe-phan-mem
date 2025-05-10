@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import ProductType from "../types/interface/IProduct";
-
+// file định nghĩa cấu trúc dữ liệu cho cơ sở dữ liệu
 const productSchema = new Schema<ProductType>(
   {
     name: { type: String, required: true },

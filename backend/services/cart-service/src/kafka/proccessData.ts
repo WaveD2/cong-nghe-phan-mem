@@ -51,6 +51,10 @@ const Upsert = async <T>(
     console.error("Error processing data:", (error as Error).message);
   }
 };
+
+// trách nhận lắng nghe thông báo gửi đến qua kafka và xử lý logic để đồng bộ dữ liệu
+// thực thi logic theo sử kiện EVENT
+
 function switchFun<T>(payload: TPayload<T>, model: Model<T>) {
   switch (payload.event) {
     case Event.CREATE:
