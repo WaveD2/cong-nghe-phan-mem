@@ -90,7 +90,7 @@ const processData = async <T extends Document>(
   await kafka.subscribe(
     topic,
     `${service}-${groupName}`,
-    (paylaod: TPayload<T>) => switchFun(paylaod, model)
+    (payload: TPayload<T>) => switchFun(payload, model)
   );
 };
 
