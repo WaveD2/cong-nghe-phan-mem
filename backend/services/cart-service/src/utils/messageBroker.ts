@@ -4,15 +4,16 @@ import { TOPIC_TYPE, messageType } from "../types/kafkaType";
 import { Event } from "../types/events";
 
 // Kafka Config
-const KAFKA_CLIENT_ID = "cart-service";
+const KAFKA_CLIENT_ID = process.env.SERVICE || "cart-service";
 //localhost:9092
-const KAFKA_BROKERS = ["kafka:29092"];
+const KAFKA_BROKERS = process.env.KAFKA_BROKERS  ? [process.env.KAFKA_BROKERS] : ["kafka:29092"];
 
 class MessageBroker implements IKafka {
   private kafka: Kafka;
   private producer: Producer;
 
   constructor() {
+    console.log("MessageBroker:::", KAFKA_BROKERS, KAFKA_CLIENT_ID);
   // kết nối
     this.kafka = new Kafka({
       clientId: KAFKA_CLIENT_ID,

@@ -1,97 +1,122 @@
 import { Document, Model, ObjectId } from "mongoose";
 import { TOPIC_TYPE } from "../types/kafkaType";
-import MessageBroker from "../utils/messageBroker";
 import { Event } from "../types/events";
-import { config } from "dotenv";
 import { TPayload } from "../types/consumerType";
+import MessageBroker from "../utils/messageBroker";
+import { config } from "dotenv";
 
 config();
 
-const service = process.env.SERVICE || "cart-service";
-
-const Create = async <T>(id: string | ObjectId, data: T, model: Model<T>) => {
-  try {
-    const exist = await model.findOne({ _id: id });
-    if (!exist) {
-      await model.create(data);
-    }
-  } catch (error) {
-    console.log((error as Error).message);
-  }
-};
-
-const Update = async <T>(
-  id: string | ObjectId,
-  data: Record<string, any>,
-  model: Model<T>
-) => {
-  try {
-    await model.findOneAndUpdate({ _id: id }, data);
-  } catch (error) {
-    console.log("Error proccessing data : ", (error as Error).message);
-  }
-};
-
-const Delete = async <T>(id: string | ObjectId, model: Model<T>) => {
-  try {
-    await model.findOneAndDelete({ _id: id });
-  } catch (error) {
-    console.log((error as Error).message);
-  }
-};
-
-const Upsert = async <T>(
-  id: string | ObjectId,
-  data: Record<string, any>,
-  model: Model<T>
-) => {
-  try {
-    await model.findOneAndUpdate({ _id: id }, data, { upsert: true });
-  } catch (error) {
-    console.error("Error processing data:", (error as Error).message);
-  }
-};
-function switchFun<T>(payload: TPayload<T>, model: Model<T>) {
-  switch (payload.event) {
-    case Event.CREATE:
-      Create<T>(
-        payload.message.data._id as string | ObjectId,
-        payload.message.data,
-        model
-      );
-      break;
-    case Event.UPDATE:
-      Update<T>(
-        payload.message.data._id as string | ObjectId,
-        payload.message.data,
-        model
-      );
-      break;
-    case Event.DELETE:
-      Delete<T>(payload.message.data._id as string | ObjectId, model);
-      break;
-    case Event.UPSERT:
-      Upsert<T>(
-        payload.message.data._id as string | ObjectId,
-        payload.message.data,
-        model
-      );
-      break;
-  }
+interface ConsumerConfig<T extends Document> {
+  topic: TOPIC_TYPE;
+  groupId: string;
+  model: Model<T>;
 }
 
-const processData = async <T extends Document>(
-  topic: TOPIC_TYPE,
-  groupName: string,
-  model: Model<T>
-) => {
+/**
+ * Create document if it doesn't exist
+ */
+const createDocument = async <T>(id: string | ObjectId, data: T, model: Model<T>): Promise<void> => {
+  try {
+    const exists = await model.exists({ _id: id });
+    if (!exists) {
+      await model.create(data);
+      console.log(`[CREATE] ${model.modelName} created with ID: ${id}`);
+    }
+  } catch (error) {
+    console.error(`[CREATE] ${model.modelName} error for ID ${id}:`, (error as Error).message);
+  }
+};
+
+/**
+ * Update document by _id
+ */
+const updateDocument = async <T>(id: string | ObjectId, data: Partial<T>, model: Model<T>): Promise<void> => {
+  try {
+    const updated = await model.findOneAndUpdate({ _id: id }, { $set: data }, { new: true });
+    if (updated) {
+      console.log(`[UPDATE] ${model.modelName} updated with ID: ${id}`);
+    }
+  } catch (error) {
+    console.error(`[UPDATE] ${model.modelName} error for ID ${id}:`, (error as Error).message);
+  }
+};
+
+/**
+ * Delete document by _id
+ */
+const deleteDocument = async <T>(id: string | ObjectId, model: Model<T>): Promise<void> => {
+  try {
+    const deleted = await model.findOneAndDelete({ _id: id });
+    if (deleted) {
+      console.log(`[DELETE] ${model.modelName} deleted with ID: ${id}`);
+    }
+  } catch (error) {
+    console.error(`[DELETE] ${model.modelName} error for ID ${id}:`, (error as Error).message);
+  }
+};
+
+/**
+ * Upsert document by _id
+ */
+const upsertDocument = async <T>(id: string | ObjectId, data: Partial<T>, model: Model<T>): Promise<void> => {
+  try {
+    const upserted = await model.findOneAndUpdate({ _id: id }, { $set: data }, { upsert: true, new: true });
+    console.log(`[UPSERT] ${model.modelName} upserted with ID: ${id}`);
+  } catch (error) {
+    console.error(`[UPSERT] ${model.modelName} error for ID ${id}:`, (error as Error).message);
+  }
+};
+
+/**
+ * Handle Kafka event based on payload
+ */
+const handleEvent = async <T>(payload: TPayload<T>, model: Model<T>): Promise<void> => {
+  const { event, message } = payload;
+  const id = message.data._id as string | ObjectId;
+
+  if (!id) {
+    console.warn(`[Invalid Payload] Missing _id in ${model.modelName} message`);
+    return;
+  }
+
+  switch (event) {
+    case Event.CREATE:
+      await createDocument(id, message.data, model);
+      break;
+    case Event.UPDATE:
+      await updateDocument(id, message.data, model);
+      break;
+    case Event.DELETE:
+      await deleteDocument(id, model);
+      break;
+    case Event.UPSERT:
+      await upsertDocument(id, message.data, model);
+      break;
+    default:
+      console.warn(`[Unknown Event] ${event} for ${model.modelName}`);
+  }
+};
+
+/**
+ * Subscribe to Kafka topic and process messages
+ */
+const processData = async <T extends Document>({ topic, groupId, model }: ConsumerConfig<T>): Promise<void> => {
   const kafka = new MessageBroker();
 
-  await kafka.subscribe(
-    topic,
-    `${service}-${groupName}`,
-    (payload: TPayload<T>) => switchFun(payload, model)
-  );
+  try {
+    await kafka.subscribe(topic, groupId, async (payload: TPayload<T>) => {
+      try {
+        await handleEvent(payload, model);
+      } catch (err) {
+        console.error(`[Kafka Consumer Error] Topic: ${topic}, Group: ${groupId}`, (err as Error).message);
+      }
+    });
+    console.log(`[Kafka] ${groupId} subscribed to topic "${topic}"`);
+  } catch (error) {
+    console.error(`[Kafka Subscription Error] Topic: ${topic}, Group: ${groupId}`, (error as Error).message);
+  }
 };
+
 
 export default processData;

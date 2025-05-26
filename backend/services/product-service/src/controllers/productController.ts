@@ -1,161 +1,156 @@
 import { Model } from "mongoose";
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import Product from "../models/productModel";
 import { ProductType } from "../types/interface/IProduct";
 import MessageBroker from "../utils/messageBroker";
 import { ProductEvent } from "../types/kafkaType";
 
+const ERROR_MESSAGES = {
+  MISSING_FIELDS: "Thiếu trường thông tin",
+  PRODUCT_EXISTS: "Sản phẩm đã tồn tại",
+  MISSING_ID: "Thiếu ID sản phẩm",
+  PRODUCT_NOT_FOUND: "Sản phẩm không tồn tại",
+};
+
+const DEFAULT_LIMIT = 10;
+
 class ProductController {
-  private ProductModel: Model<ProductType>;
-  private kafka: MessageBroker;
+  private readonly ProductModel: Model<ProductType>;
+  private readonly kafka: MessageBroker;
 
   constructor() {
     this.ProductModel = Product;
     this.kafka = new MessageBroker();
   }
-  // tạo sản phẩm
-  async addProduct(req: Request, res: Response): Promise<void> {
+
+  private async publishToKafka(
+    product: ProductType,
+    event: ProductEvent
+  ): Promise<void> {
+    try {
+      await this.kafka.publish("Product-Topic", { data: product }, event);
+    } catch (kafkaError) {
+      console.error("Kafka publish failed:", kafkaError);
+    }
+  }
+
+  private validateProductId(id: string | undefined, res: Response): boolean {
+    if (!id) {
+      res.status(400).json({ message: ERROR_MESSAGES.MISSING_ID });
+      return false;
+    }
+    return true;
+  }
+
+  addProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { name, description, price, stock } = req.body;
 
-      if (!name || !description || !price || !stock)
-        throw new Error("Thiếu trường thông tin");
-
-      const exist = await this.ProductModel.findOne({ name });
-
-      if (!exist) {
-        const newProduct = await this.ProductModel.create({
-          name: name,
-          price: price,
-          description: description,
-          stock: stock,
-        });
-
-        try {
-          await this.kafka.publish(
-            "Product-Topic",
-            { data: newProduct },
-            ProductEvent.CREATE
-          );
-        } catch (kafkaError) {
-          console.error("Kafka publish failed:", kafkaError);
-          throw new Error("Failed to publish Kafka event");
-        }
-
-        res.status(201).json({ message: "Thêm sản phẩm thành công", data : newProduct });
-        return
-
-      } else {
-        res.status(401).json({ message: "Sản phẩm đã tồn tại" });
-        return
-
+      if (!name || !description || price == null || stock == null) {
+        res.status(400).json({ message: ERROR_MESSAGES.MISSING_FIELDS });
+        return;
       }
-    } catch (error: any) {
-      res.status(400).json({ message: "Somthing Went Wrong..." });
-      return
 
+      const existingProduct = await this.ProductModel.findOne({ name });
+      if (existingProduct) {
+        res.status(409).json({ message: ERROR_MESSAGES.PRODUCT_EXISTS });
+        return;
+      }
+
+      const newProduct = await this.ProductModel.create({
+        name: name.trim(),
+        description: description.trim(),
+        price: Number(price),
+        stock: Number(stock),
+      });
+
+      await this.publishToKafka(newProduct, ProductEvent.CREATE);
+
+      res.status(201).json({ message: "Thêm sản phẩm thành công", data: newProduct });
+    } catch (error) {
+      next(error);
     }
-  }
-  // chỉnh sửa sản phẩm
-  async editProduct(req: Request, res: Response): Promise<void> {
+  };
+
+  editProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
+      const { id } = req.params;
+      if (!this.validateProductId(id, res)) return;
+
+      const product = await this.ProductModel.findById(id);
+      if (!product) {
+        res.status(404).json({ message: ERROR_MESSAGES.PRODUCT_NOT_FOUND });
+        return;
+      }
+
       const { name, description, price, stock } = req.body;
-      const { id } = req.params;
+      const updates: Partial<ProductType> = {
+        ...(name && { name: name.trim() }),
+        ...(description && { description: description.trim() }),
+        ...(price != null && { price: Number(price) }),
+        ...(stock != null && { stock: Number(stock) }),
+      };
 
-      const find = await this.ProductModel.findOne({ _id: id });
+      const updatedProduct = await this.ProductModel.findByIdAndUpdate(
+        id,
+        { $set: updates },
+        { new: true }
+      );
 
-      if (find) {
-        const updateProduct = await this.ProductModel.findByIdAndUpdate(
-          { _id: find._id },
-          {
-            $set: {
-              name: name,
-              description: description,
-              price: price,
-              stock: stock,
-            },
-          },
-          { new: true } 
-        );
+      await this.publishToKafka(updatedProduct!, ProductEvent.UPDATE);
 
-        await this.kafka.publish(
-          "Product-Topic",
-          { data: updateProduct },
-          ProductEvent.UPDATE
-        );
-
-        if (updateProduct) {
-          res.status(201).json({ message: "Cập nhật thành công." , data : updateProduct });
-          return
-
-        }
-      }
-      res.status(401).json({ message: "Sản phẩm không tồn tại" });
-      return
-
+      res.status(200).json({ message: "Cập nhật thành công", data: updatedProduct });
     } catch (error) {
-      res.status(400).json({ message: "Somthing Went Wrong..." });
-      return
-
+      next(error);
     }
-  }
-  // xóa sản phẩm
-  async deleteProduct(req: Request, res: Response): Promise<void> {
+  };
+
+  deleteProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { id } = req.params;
+      if (!this.validateProductId(id, res)) return;
 
-      if (id) {
-        const deleteProduct = await this.ProductModel.findByIdAndDelete(id);
-
-        if (deleteProduct) {
-          await this.kafka.publish(
-            "Product-Topic",
-            { data: deleteProduct },
-            ProductEvent.UPDATE
-          );
-           res.status(200).json({ message: "Xóa thành công", data : deleteProduct });
-            return
-        }
-         res.status(401).json({ message: "Sản phẩm không tồn tại" });
-         return 
+      const deletedProduct = await this.ProductModel.findByIdAndDelete(id);
+      if (!deletedProduct) {
+        res.status(404).json({ message: ERROR_MESSAGES.PRODUCT_NOT_FOUND });
+        return;
       }
+
+      await this.publishToKafka(deletedProduct, ProductEvent.DELETE);
+
+      res.status(200).json({ message: "Xóa thành công", data: deletedProduct });
     } catch (error) {
-      res.status(400).json({ message: "Somthing Went Wrong..." });
-      return
+      next(error);
     }
-  }
-  // chi tiết sản phẩm
-  async detailProduct(req: Request, res: Response): Promise<void> {
+  };
+
+  detailProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { id } = req.params;
-      const data = await this.ProductModel.findOne({ _id: id });
-      if(!data) {
-         res.status(404).json({ message: "Sản phẩm không tồn tại" });
-         return
+      if (!this.validateProductId(id, res)) return;
+
+      const product = await this.ProductModel.findById(id);
+      if (!product) {
+        res.status(404).json({ message: ERROR_MESSAGES.PRODUCT_NOT_FOUND });
+        return;
       }
-        res.status(200).json({ data });
-        return
+
+      res.status(200).json({ data: product });
     } catch (error) {
-      res.status(400).json({ message: "Somthing Went Wrong..." });
-      return
+      next(error);
     }
-  }
-  // danh sách sản phẩm
-  async listProduct(req: Request, res: Response): Promise<void> {
+  };
+
+  listProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const {limit = 10} = req.query
-      const data = await this.ProductModel.find().limit(Number(limit));
-      if(!data) {
-         res.status(404).json({ message: "Sản phẩm không tồn tại" });
-         return
-      }
-        res.status(200).json({ data });
-        return
+      const limit = Number(req.query.limit) || DEFAULT_LIMIT;
+      const products = await this.ProductModel.find().limit(Math.max(1, limit));
+
+      res.status(200).json({ data: products });
     } catch (error) {
-      res.status(400).json({ message: "Somthing Went Wrong..." });
-      return
+      next(error);
     }
-  }
+  };
 }
 
 export default ProductController;

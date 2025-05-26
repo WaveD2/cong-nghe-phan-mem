@@ -3,6 +3,8 @@ import { config } from "dotenv";
 import dbConnect from "./config/dbConnection";
 import userRoute from "./routes/userRoute";
 import { errorHandler } from "./middleware/errMiddlware";
+import cookieParser from "cookie-parser";
+
 
 config();
 dbConnect();
@@ -13,6 +15,7 @@ const apiRoot = process.env.API_ROOT || "/api/user-service";
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 app.use(apiRoot, userRoute);
 

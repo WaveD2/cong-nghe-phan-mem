@@ -3,7 +3,7 @@ import { config } from "dotenv";
 import cookieParser from "cookie-parser";
 import dbConnect from "./config/dbConnection";
 import orderRoute from "./routers/orderRoutes";
-import authMid from "./middlewares/authMid";
+import {authMid} from "./middlewares/authMid";
 import consumeMessage from "./utils/consumeMessage";
 import { errorHandler } from "./middlewares/errMiddlware";
 

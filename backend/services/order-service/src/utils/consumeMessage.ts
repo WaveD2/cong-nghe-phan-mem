@@ -7,9 +7,9 @@ import IProduct from "../types/interface/IProduct";
 import iUser from "../types/interface/IUser";
 
 const consumeMessage = () => {
-  processData<iUser>("User-Topic", "user-group", User); // For User
-  processData<IProduct>("Product-Topic", "product-group", Product); // For Product
-  processData<ICart>("Cart-Topic", "cart-group", Cart); // For Cart
+  processData<iUser>({topic: "User-Topic", groupId: "user-odder-group", model: User});  
+  processData<IProduct>({topic: "Product-Topic", groupId: "product-order-group", model: Product});   
+  processData<ICart>({topic: "Cart-Topic", groupId: "cart-order-group", model: Cart}); 
 };
 
 export default consumeMessage;

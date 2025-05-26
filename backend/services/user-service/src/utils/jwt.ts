@@ -1,5 +1,6 @@
 import { jwtVerify } from "jose";
 import jwt from "jsonwebtoken";
+import { UserType } from "../types/interface/IUser";
 
 class Jwt {
   private secret: string;
@@ -8,8 +9,8 @@ class Jwt {
     this.secret = process.env.JWT_SECRET || "tungdev@123321";
   }
 
-  generateToken(userId: string) {
-    const token = jwt.sign({ userId }, this.secret, {
+  generateToken(user : UserType) {
+    const token = jwt.sign({ user }, this.secret, {
       expiresIn: "30d",
     });
 

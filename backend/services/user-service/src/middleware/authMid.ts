@@ -7,7 +7,7 @@ export const authMid = async (req: AuthRequest, res: Response, next: NextFunctio
 
   if (!token) {
     res.status(401).json({ message: "Chưa đăng nhập" });
-    return; 
+    return;  
   }
 
   try {

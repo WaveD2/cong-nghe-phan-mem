@@ -3,12 +3,28 @@ import { UserType } from "../types/interface/IUser";
 
 const userSchema = new Schema<UserType>(
   {
-    userId: { type: Number, required: true, unique: true },
     name: { type: String, required: true },
     email: { type: String, required: true },
     password: { type: String, required: true },
+    role: { type: String, default: "user" },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    // toJSON: {
+    //   transform(doc, ret) {
+    //     delete ret.password;
+    //     delete ret.__v;
+    //     return ret;
+    //   },
+    // },
+    // toObject: {
+    //   transform(doc, ret) {
+    //     delete ret.password;
+    //     delete ret.__v;
+    //     return ret;
+    //   },
+    // },
+  }
 );
 
 const User = mongoose.model<UserType>("user", userSchema);

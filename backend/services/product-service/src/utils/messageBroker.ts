@@ -1,15 +1,20 @@
 import { Kafka, logLevel, Partitioners, Producer } from "kafkajs";
 import IKafka from "../types/interface/IKafka";
 import { TOPIC_TYPE, messageType, ProductEvent } from "../types/kafkaType";
+import { config } from "dotenv";
 
-const KAFKA_CLIENT_ID = "product-service";
-const KAFKA_BROKERS =  ["kafka:29092"];
+config();
+
+const KAFKA_CLIENT_ID = process.env.SERVICE || "product-service";
+//localhost:9092
+const KAFKA_BROKERS = process.env.KAFKA_BROKERS  ? [process.env.KAFKA_BROKERS] : ["kafka:29092"];
 
 class MessageBroker implements IKafka {
   private kafka: Kafka;
   private producer: Producer;
 
   constructor() {
+    console.log("MessageBroker:::", KAFKA_BROKERS, KAFKA_CLIENT_ID);
     this.kafka = new Kafka({
       clientId: KAFKA_CLIENT_ID,
       brokers: KAFKA_BROKERS,

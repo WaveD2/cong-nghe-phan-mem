@@ -1,4 +1,4 @@
-export type messagetype = Record<string, any> & {
+export type messageType = Record<string, any> & {
   data: any;
 };
 
@@ -8,4 +8,5 @@ export enum UserEvent {
   DELETE = "DELETE",
 }
 
-export type TOPIC_TYPE = "User-Topic" | "Cart-Topic" | "Order-Topic";
+export type TOPIC_TYPE = "User-Topic"
+

@@ -14,6 +14,6 @@ orderRoute
 
 orderRoute
   .route("/")
-  .get(orederController.getAllOrderds.bind(orederController));
+  .get(orederController.getAllOrders.bind(orederController));
 
 export default orderRoute;

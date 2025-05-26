@@ -15,8 +15,8 @@ services:
     depends_on:
       - zookeeper
     ports:
-      - "9092:9092"       
-      - "29092:29092"    
+      - "9092:9092"
+      - "29092:29092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -28,6 +28,54 @@ services:
     networks:
       - ecommerce_network
 
+  user-mongodb:
+    image: mongo:7.0.4
+    container_name: user-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - user-mongodb-data:/data/db
+    networks:
+      - ecommerce_network
+    environment:
+      MONGO_INITDB_DATABASE: user_db
+
+  cart-mongodb:
+    image: mongo:7.0.4
+    container_name: cart-mongodb
+    ports:
+      - "27018:27017"
+    volumes:
+      - cart-mongodb-data:/data/db
+    networks:
+      - ecommerce_network
+    environment:
+      MONGO_INITDB_DATABASE: cart_db
+
+  product-mongodb:
+    image: mongo:7.0.4
+    container_name: product-mongodb
+    ports:
+      - "27019:27017"
+    volumes:
+      - product-mongodb-data:/data/db
+    networks:
+      - ecommerce_network
+    environment:
+      MONGO_INITDB_DATABASE: product_db
+
+  order-mongodb:
+    image: mongo:7.0.4
+    container_name: order-mongodb
+    ports:
+      - "27020:27017"
+    volumes:
+      - order-mongodb-data:/data/db
+    networks:
+      - ecommerce_network
+    environment:
+      MONGO_INITDB_DATABASE: order_db
+
   user-service:
     build:
       context: ./services/user-service
@@ -36,10 +84,12 @@ services:
       - "7001:7001"
     depends_on:
       - kafka
+      - user-mongodb
     networks:
       - ecommerce_network
     environment:
-      KAFKA_BROKERS: kafka:9092
+      KAFKA_BROKERS: kafka:29092
+      MONGODB_URI: mongodb://user-mongodb:27017/user_db
 
   cart-service:
     build:
@@ -49,10 +99,12 @@ services:
       - "7003:7003"
     depends_on:
       - kafka
+      - cart-mongodb
     networks:
       - ecommerce_network
     environment:
-      KAFKA_BROKERS: kafka:9092
+      KAFKA_BROKERS: kafka:29092
+      MONGODB_URI: mongodb://cart-mongodb:27017/cart_db
 
   product-service:
     build:
@@ -62,11 +114,13 @@ services:
       - "7002:7002"
     depends_on:
       - kafka
+      - product-mongodb
     networks:
       - ecommerce_network
     environment:
-      KAFKA_BROKERS: kafka:9092
-  
+      KAFKA_BROKERS: kafka:29092
+      MONGODB_URI: mongodb://product-mongodb:27017/product_db
+
   order-service:
     build:
       context: ./services/order-service
@@ -75,10 +129,12 @@ services:
       - "7004:7004"
     depends_on:
       - kafka
+      - order-mongodb
     networks:
       - ecommerce_network
     environment:
-      KAFKA_BROKERS: kafka:9092
+      KAFKA_BROKERS: kafka:29092
+      MONGODB_URI: mongodb://order-mongodb:27017/order_db
 
   nginx:
     container_name: nginx-gateway
@@ -97,3 +153,9 @@ services:
 networks:
   ecommerce_network:
     driver: bridge
+
+volumes:
+  user-mongodb-data:
+  cart-mongodb-data:
+  product-mongodb-data:
+  order-mongodb-data:

@@ -1,6 +1,8 @@
+import UserType from "./interface/IUser";
+
 interface jwtPayload {
   payload: {
-    userId: string;
+    user: UserType
   };
 }
 export default jwtPayload;

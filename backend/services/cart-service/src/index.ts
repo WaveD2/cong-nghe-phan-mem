@@ -2,7 +2,7 @@ import express from 'express'
 import { config } from 'dotenv';
 import dbConnect from './config/dbConnection';
 import cookieParser from "cookie-parser";
-import authMid from './middlewares/authMiddlware';
+import { authMid } from './middlewares/authMiddlware';
 import cartRouter from './routers/cartRouter';
 import consumeMessage from './utils/consumeMessage';
 import { errorHandler } from './middlewares/errMiddlware';

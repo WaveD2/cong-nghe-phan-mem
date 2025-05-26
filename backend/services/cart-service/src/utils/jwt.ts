@@ -1,6 +1,7 @@
 import { jwtVerify } from "jose";
 import jwt from "jsonwebtoken"
 import jwtPayload from "../types/jwt";
+import UserType from "../types/interface/IUser";
 
 // tạo token bằng jwt
 class Jwt {
@@ -10,8 +11,8 @@ class Jwt {
     this.secret =  "tungdev@123321";
   }
 
-  generateToken(userId: string) {
-    const token = jwt.sign({ userId }, this.secret, {
+  generateToken(user : UserType) {
+    const token = jwt.sign({ user }, this.secret, {
       expiresIn: "30d",
     });
 

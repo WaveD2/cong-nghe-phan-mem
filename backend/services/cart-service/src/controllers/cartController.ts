@@ -1,6 +1,6 @@
 import { Response } from "express";
-import { AuthRequest } from "../types/api";
 import { Model, Types } from "mongoose";
+import { AuthRequest } from "../types/api";
 import IProduct from "../types/interface/IProduct";
 import ICart from "../types/interface/ICart";
 import Product from "../models/productModel";
@@ -8,11 +8,25 @@ import Cart from "../models/cartModel";
 import MessageBroker from "../utils/messageBroker";
 import { Event } from "../types/events";
 
-// file xử lý logic của server
+const ERROR_MESSAGES = {
+  MISSING_FIELDS: "Thiếu trường thông tin",
+  INVALID_OBJECT_ID: "ID không hợp lệ",
+  PRODUCT_NOT_FOUND: "Sản phẩm không tồn tại",
+  INSUFFICIENT_STOCK: "Số lượng đặt hàng vượt quá số lượng trong kho",
+  CART_NOT_FOUND: "Không tìm thấy giỏ hàng",
+  CART_REMOVE_ERROR: "Lỗi xóa giỏ hàng",
+  SERVER_ERROR: "Lỗi server",
+};
+
+interface CartItemInput {
+  id: string;
+  quantity: number;
+}
+
 class CartController {
-  private productModel: Model<IProduct>;
-  private cartModel: Model<ICart>;
-  private kafka: MessageBroker;
+  private readonly productModel: Model<IProduct>;
+  private readonly cartModel: Model<ICart>;
+  private readonly kafka: MessageBroker;
 
   constructor() {
     this.productModel = Product;
@@ -20,109 +34,140 @@ class CartController {
     this.kafka = new MessageBroker();
   }
 
-  // tạo giỏ hàng
-  async addCart(req: AuthRequest, res: Response): Promise<any> {
+  private async publishToKafka(cart: ICart, event: Event): Promise<void> {
     try {
-      const { id, quantity } = req.body;
+      await this.kafka.publish("Cart-Topic", { data: cart }, event);
+    } catch (kafkaError) {
+      console.error("Kafka publish failed:", kafkaError);
+    }
+  }
 
-      if (!id || !quantity) {
-        return res
-          .status(400)
-          .json({ message: "thiết trường thông tin" });
-      }
+  private getUserId(req: AuthRequest): string {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) throw new Error("Không tìm thấy thông tin người dùng");
+    return userId;
+  }
 
-      const objectId = new Types.ObjectId(id);
+  private validateObjectId(id: string, res: Response): Types.ObjectId | null {
+    try {
+      return new Types.ObjectId(id);
+    } catch {
+      res.status(400).json({ message: ERROR_MESSAGES.INVALID_OBJECT_ID });
+      return null;
+    }
+  }
+
+  private validateCartInput({ id, quantity }: CartItemInput, res: Response): boolean {
+    if (!id || !quantity || quantity <= 0) {
+      res.status(400).json({ message: ERROR_MESSAGES.MISSING_FIELDS });
+      return false;
+    }
+    return true;
+  }
+
+  async addCart(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const input: CartItemInput = req.body;
+      if (!this.validateCartInput(input, res)) return;
+
+      const objectId = this.validateObjectId(input.id, res);
+      if (!objectId) return;
 
       const product = await this.productModel.findById(objectId);
-
       if (!product) {
-        return res.status(400).json({ message: "Sản phẩm không tồn tại" });
+        res.status(404).json({ message: ERROR_MESSAGES.PRODUCT_NOT_FOUND });
+        return;
       }
 
-      if(product.stock < quantity) {
-        return res.status(400).json({ message: "Số lượng đặt hàng quá số lượng trong kho" });
+      if (product.stock < input.quantity) {
+        res.status(400).json({ message: ERROR_MESSAGES.INSUFFICIENT_STOCK });
+        return;
       }
 
-      const userId = req.user;
-      //tìm kiếm giỏ hàng
+      const userId = this.getUserId(req);
       const updateCart = await this.cartModel.findOneAndUpdate(
-        { userId: userId, "items.productId": id },
-        { $set: { "items.$.quantity": quantity } },
+        { userId, "items.productId": objectId },
+        { $set: { "items.$.quantity": Number(input.quantity) } },
         { new: true }
       );
-      // nếu giỏ hàng tồn tại rồi thì mình cập nhật
+
       if (updateCart) {
-        // gửi thông báo cho các service khác biết để đồng bộ dữ liệu
-        await this.kafka.publish(
-          "Cart-Topic",
-          { data: updateCart },
-          Event.UPDATE
-        );
-        return res
-          .status(200)
-          .json({ message: "Cập nhật thành công", data: updateCart });
-      } else {
-        const newCart = await this.cartModel.findOneAndUpdate(
-          { userId },
-          { $push: { items: { productId: id, quantity: quantity } } },
-          { new: true, upsert: true }
-        );
-        // gửi thông báo cho các service khác biết để đồng bộ dữ liệu
-        await this.kafka.publish("Cart-Topic", { data: newCart }, Event.UPSERT);
-        return res
-          .status(200)
-          .json({ message: "Tạo giỏ hàng thành công", data: newCart });
+        await this.publishToKafka(updateCart, Event.UPDATE);
+        res.status(200).json({ message: "Cập nhật giỏ hàng thành công", data: updateCart });
+        return;
       }
+
+      const newCart = await this.cartModel.findOneAndUpdate(
+        { userId },
+        { $push: { items: { productId: objectId, quantity: Number(input.quantity) } } },
+        { new: true, upsert: true }
+      );
+
+      await this.publishToKafka(newCart, Event.UPSERT);
+      res.status(201).json({ message: "Tạo giỏ hàng thành công", data: newCart });
     } catch (error) {
-      console.error("Lỗi tạo giỏ hàng:", error);
-      return res.status(400).json({ message: "Lỗi tạo giỏ hàng" });
+      console.error("Lỗi tạo/cập nhật giỏ hàng:", error);
+      res.status(500).json({ message: ERROR_MESSAGES.SERVER_ERROR });
     }
   }
 
-  // lấy danh sách giỏ hàng
-
-  async getCart(req: AuthRequest, res: Response): Promise<any> {
+  async getCart(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const getCart = await this.cartModel
-        .findOne({ userId: req.user })
-        .populate("items.productId");
-      return res.status(200).json({ data: getCart });
+      const userId = this.getUserId(req);
+      const cart = await this.cartModel
+        .findOne({ userId })
+        .populate("items.productId")
+        .lean();
+      res.status(200).json({ data: cart || null });
     } catch (error) {
-      throw new Error("Lỗi không có giỏ hàng");
+      console.error("Lỗi lấy giỏ hàng:", error);
+      res.status(500).json({ message: ERROR_MESSAGES.CART_NOT_FOUND });
     }
   }
-  // xóa sản phẩm trong giỏ hàng
 
-  async removeCart(req: AuthRequest, res: Response): Promise<any> {
+  async get(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const objectId = this.validateObjectId(id, res);
+      if (!objectId) return;
+
+      const cart = await this.cartModel.findById(objectId).lean();
+      res.status(200).json({ data: cart || null });
+    } catch (error) {
+      console.error("Lỗi lấy giỏ hàng:", error);
+      res.status(500).json({ message: ERROR_MESSAGES.CART_NOT_FOUND });
+    }
+  }
+
+  async removeCart(req: AuthRequest, res: Response): Promise<void> {
     try {
       const { id } = req.body;
+      const objectId = this.validateObjectId(id, res);
+      if (!objectId) return;
 
-      const findProduct = await this.productModel.findOne({ _id: id });
+      const product = await this.productModel.findById(objectId);
+      if (!product) {
+        res.status(404).json({ message: ERROR_MESSAGES.PRODUCT_NOT_FOUND });
+        return;
+      }
 
-      if (!findProduct) throw new Error("Không tìm thấy sản phẩm!");
-
+      const userId = this.getUserId(req);
       const cartRemove = await this.cartModel.findOneAndUpdate(
-        { userId: req.user },
-        {
-          $pull: {
-            items: { productId: id },
-          },
-        },
+        { userId, "items.productId": objectId },
+        { $pull: { items: { productId: objectId } } },
         { new: true }
       );
-      if (cartRemove) {
-        // gửi thông báo cho các service khác biết xóa giỏ hàng để đồng bộ dữ liệu
-        await this.kafka.publish(
-          "Cart-Topic",
-          { data: cartRemove },
-          Event.UPDATE
-        );
-        return res.status(200).json({ message: "Xóa thành công" });
+
+      if (!cartRemove) {
+        res.status(404).json({ message: ERROR_MESSAGES.CART_NOT_FOUND });
+        return;
       }
-      return res.status(404).json({ message: "Lỗi xóa giỏ hàng" });
-    } catch (error : any) {
-      console.error("Lỗi Remove Cart:", error);
-      return res.status(400).json({ message: error.message || "Lỗi xóa giỏ hàng" });
+
+      await this.publishToKafka(cartRemove, Event.UPDATE);
+      res.status(200).json({ message: "Xóa sản phẩm khỏi giỏ hàng thành công", data: cartRemove });
+    } catch (error) {
+      console.error("Lỗi xóa sản phẩm khỏi giỏ hàng:", error);
+      res.status(500).json({ message: ERROR_MESSAGES.CART_REMOVE_ERROR });
     }
   }
 }

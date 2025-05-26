@@ -12,6 +12,6 @@
     "rootDir": "./src",
     "experimentalDecorators": true
   },
-  "include": ["src"],
+  "include": ["src", "constans.ts"],
   "exclude": ["node_modules"]
 }

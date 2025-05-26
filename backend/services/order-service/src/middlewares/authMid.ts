@@ -1,21 +1,36 @@
-import { NextFunction, Response } from "express";
+import { Response, NextFunction } from "express";
 import Jwt from "../utils/jwt";
 import { AuthRequest } from "../types/api";
-import jwtPayload from "../types/jwt";
 
-const authMid = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authMid = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const token = req.cookies.jwtToken;
 
   if (!token) {
-    res.status(400);
-    throw new Error("unothriezed user and user dont have token");
-  } else {
+    res.status(401).json({ message: "Chưa đăng nhập" });
+    return; 
+  }
+
+  try {
     const jwt = new Jwt();
-    const {
-      payload: { userId },
-    }: jwtPayload = await jwt.verifyToken(token);
-    (req.user = userId), next();
+    const { payload }: any = await jwt.verifyToken(token);
+
+    if (!payload?.user) {
+      throw new Error("Token không chứa user");
+    }
+
+    req.user = payload.user;
+    return next(); 
+  } catch (error) {
+    res.status(401).json({ message: "Token không hợp lệ" });
+    return; 
   }
 };
 
-export default authMid;
+
+export const autAdminMid = (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (!req.user || req.user.role !== "admin") {
+     res.status(403).json({ message: "Không đủ quyền" });
+     return;
+  }
+  next();
+};

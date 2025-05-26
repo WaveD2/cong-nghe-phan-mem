@@ -1,4 +1,4 @@
-import UserType from "./interface/IUser";
+import { UserType } from "./interface/IUser";
 
 interface jwtPayload {
   payload: {

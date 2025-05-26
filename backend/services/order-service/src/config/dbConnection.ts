@@ -3,10 +3,11 @@ import { config } from "dotenv";
 config();
 
 export default async function dbConnect() {
-  const mongoUrl = "mongodb+srv://tungdev64:WRwOgHdNiqCdfbLb@shop.ry7alok.mongodb.net";
-
+  const mongoUrl = process.env.MONGODB_URI;
+  console.log("mongoUrl:::", mongoUrl);
+  
   if (!mongoUrl) {
-    throw new Error("MONGO_URL is not defined in the environment variables");
+    throw new Error("MONGODB_URI is not defined in the environment variables");
   }
 
   await connect(mongoUrl)

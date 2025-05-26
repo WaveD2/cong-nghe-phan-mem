@@ -10,4 +10,3 @@ export type TPayload<T> = {
 export interface DocumentWithId {
   _id?: string | ObjectId;
 }
-

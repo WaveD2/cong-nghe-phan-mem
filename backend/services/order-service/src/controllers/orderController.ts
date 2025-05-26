@@ -1,20 +1,37 @@
-import { Model } from "mongoose";
-import MessageBroker from "../utils/messageBroker";
+import { Response, NextFunction } from "express";
+import { Model, Types } from "mongoose";
+import { AuthRequest } from "../types/api";
 import ICart from "../types/interface/ICart";
 import IProduct from "../types/interface/IProduct";
+import { IOrder } from "../types/interface/IOrder";
 import Cart from "../models/cartModel";
 import Product from "../models/productModel";
-import { IOrder } from "../types/interface/IOrder";
 import Order from "../models/orderModel";
-import { AuthRequest } from "../types/api";
-import { NextFunction, Response } from "express";
+import MessageBroker from "../utils/messageBroker";
 import { Event } from "../types/events";
+import { TOPIC_TYPE } from "../types/kafkaType";
+
+const ERROR_MESSAGES = {
+  MISSING_FIELDS: "Thiếu trường thông tin",
+  INVALID_OBJECT_ID: "ID không hợp lệ",
+  CART_EMPTY: "Giỏ hàng đang rỗng",
+  PRODUCT_NOT_FOUND: "Sản phẩm không tồn tại",
+  INSUFFICIENT_STOCK: "Số lượng đặt hàng vượt quá số lượng trong kho",
+  ORDER_NOT_FOUND: "Không tìm thấy đơn hàng",
+  SERVER_ERROR: "Lỗi server",
+};
+
+interface ShippingAddress {
+  street: string;
+  city: string;
+  state: string;
+}
 
 class OrderController {
-  private kafka: MessageBroker;
-  private cartModel: Model<ICart>;
-  private productModel: Model<IProduct>;
-  private orderModel: Model<IOrder>;
+  private readonly kafka: MessageBroker;
+  private readonly cartModel: Model<ICart>;
+  private readonly productModel: Model<IProduct>;
+  private readonly orderModel: Model<IOrder>;
 
   constructor() {
     this.kafka = new MessageBroker();
@@ -23,42 +40,71 @@ class OrderController {
     this.orderModel = Order;
   }
 
-  async createOrder(
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction
-  ): Promise<any> {
+  private async publishToKafka<T>(topic: TOPIC_TYPE, data: T, event: Event): Promise<void> {
     try {
-      const { street, city, state } = req.body;
-      const userId = req.user;
+      await this.kafka.publish(topic, { data }, event);
+    } catch (kafkaError) {
+      console.error(`Kafka publish failed for topic ${topic}:`, kafkaError);
+    }
+  }
 
-      const cart = await this.cartModel.findOne({ userId });
-      console.log(cart);
+  private getUserId(req: AuthRequest): string {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) throw new Error("Không tìm thấy thông tin người dùng");
+    return userId;
+  }
 
-      if (!cart || cart.items.length == 0) {
-        return res
-          .status(400)
-          .json({ message: "Giỏi hàng đang bị rỗng! Vui lòng kiểm tra lại" });
+  private validateObjectId(id: string, res: Response): Types.ObjectId | null {
+    try {
+      return new Types.ObjectId(id);
+    } catch {
+      res.status(400).json({ message: ERROR_MESSAGES.INVALID_OBJECT_ID });
+      return null;
+    }
+  }
+
+  private validateShippingAddress(address: ShippingAddress, res: Response): boolean {
+    if (!address.street || !address.city || !address.state) {
+      res.status(400).json({ message: ERROR_MESSAGES.MISSING_FIELDS });
+      return false;
+    }
+    return true;
+  }
+
+  async createOrder(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { street, city, state } = req.body as ShippingAddress;
+      if (!this.validateShippingAddress({ street, city, state }, res)) return;
+
+      const userId = this.getUserId(req);
+      const cart = await this.cartModel.findOne({ userId }).lean();
+      if (!cart || cart.items.length === 0) {
+        res.status(400).json({ message: ERROR_MESSAGES.CART_EMPTY });
+        return;
       }
+
+      const orderItems: Array<{ productId: Types.ObjectId; name: string; quantity: number; price: number }> = [];
       let totalAmount = 0;
-      const orderItems = [];
+
+      // Kiểm tra và cập nhật sản phẩm
       for (const item of cart.items) {
-        const product = (await this.productModel.findById(
-          item.productId
-        )) as IProduct;
-        if (!product)
-          return res
-            .status(404)
-            .json({ message: `Không tìm thấy sản phẩm : ${item.productId}` });
-        if ((product.stock as number) < item.quantity)
-          return res.status(400).json({
-            message: `Số lượng đặt hàng quá số lượng trong kho: ${product.name}`,
+        const product = await this.productModel.findById(item.productId);
+        if (!product) {
+          res.status(404).json({ message: `${ERROR_MESSAGES.PRODUCT_NOT_FOUND}: ${item.productId}` });
+          return;
+        }
+        if (product.stock < item.quantity) {
+          res.status(400).json({
+            message: `${ERROR_MESSAGES.INSUFFICIENT_STOCK}: ${product.name}`,
           });
+          return;
+        }
 
         product.stock -= item.quantity;
-        const updateProduct = await product.save();
+        const updatedProduct = await product.save();
         const productPrice = product.price * item.quantity;
         orderItems.push({
+          //@ts-ignore
           productId: item.productId,
           name: product.name,
           quantity: item.quantity,
@@ -66,75 +112,78 @@ class OrderController {
         });
         totalAmount += productPrice;
 
-        await this.kafka.publish(
-          "Order-Topic-Cart",
-          { data: updateProduct },
-          Event.UPDATE
-        );
-
-        const order = await this.orderModel.create({
-          userId,
-          items: orderItems,
-          shippingAddress: { state, street, city },
-          totalAmount,
-          paymentMethod: "Cash on Delivery",
-          status: "Pending",
-        });
-        cart.items = [];
-        const newCart = await cart.save();
-
-        await this.kafka.publish(
-          "Order-Topic-Product",
-          { data: newCart },
-          Event.UPDATE
-        );
-        return res
-          .status(200)
-          .json({ message: "Tạo đơn hàng thanh công", data: order });
+        await this.publishToKafka("Order-Topic-Product", updatedProduct, Event.UPDATE);
       }
+
+      // Tạo đơn hàng
+      const order = await this.orderModel.create({
+        userId,
+        items: orderItems,
+        shippingAddress: { street, city, state },
+        totalAmount,
+        paymentMethod: "Cash on Delivery",
+        status: "Pending",
+      });
+
+      // Xóa giỏ hàng
+      cart.items = [];
+      const updatedCart = await this.cartModel.findOneAndUpdate(
+        { userId },
+        { $set: { items: [] } },
+        { new: true }
+      );
+
+      await this.publishToKafka("Order-Topic-Cart", updatedCart, Event.UPDATE);
+
+      res.status(201).json({ message: "Tạo đơn hàng thành công", data: order });
     } catch (error) {
+      console.error("Lỗi tạo đơn hàng:", error);
       next(error);
     }
   }
 
-  async getSingleOrder(
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction
-  ): Promise<any> {
+  async getSingleOrder(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
-      const userId = req.user;
+      const objectId = this.validateObjectId(id, res);
+      if (!objectId) return;
 
-      if (!id) {
-        return res.status(400).json({ message: "Thiếu id.." });
-      }
-
-      const getOrder = await this.orderModel
-        .findOne({ userId, _id: id })
+      const userId = this.getUserId(req);
+      const order = await this.orderModel
+        .findOne({ userId, _id: objectId })
         .populate("userId")
-        .populate("items.productId");
-      if (!getOrder) {
-        return res.status(400).json({ message: "Đơn hang không tìm thấy" });
+        .populate("items.productId")
+        .lean();
+
+      if (!order) {
+        res.status(404).json({ message: ERROR_MESSAGES.ORDER_NOT_FOUND });
+        return;
       }
-      return res.status(200).json({ data: getOrder });
+
+      res.status(200).json({ data: order });
     } catch (error) {
+      console.error("Lỗi lấy đơn hàng:", error);
       next(error);
     }
   }
 
-  async getAllOrderds(
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction
-  ): Promise<any> {
+  async getAllOrders(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const findOrder = await this.orderModel.find();
-      if (!findOrder) {
-        return res.status(400).json({ message: "Không tìm thấy đơn hàng" });
+      const userId = this.getUserId(req);
+      const orders = await this.orderModel
+        .find({ userId })
+        .populate("userId")
+        .populate("items.productId")
+        .lean();
+
+      if (!orders.length) {
+        res.status(404).json({ message: ERROR_MESSAGES.ORDER_NOT_FOUND });
+        return;
       }
-      return res.status(200).json({ data: findOrder });
+
+      res.status(200).json({ data: orders });
     } catch (error) {
+      console.error("Lỗi lấy danh sách đơn hàng:", error);
       next(error);
     }
   }
