@@ -5,4 +5,5 @@ export default interface ProductType extends Document {
   description: string;
   price: number;
   stock: number;
+  img: string;
 }

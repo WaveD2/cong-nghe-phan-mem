@@ -3,16 +3,16 @@ import Jwt from "../utils/jwt";
 import { AuthRequest } from "../types/api";
 
 export const authMid = async (req: AuthRequest, res: Response, next: NextFunction) => {
-  const token = req.cookies.jwtToken;
+  const accessToken = req.cookies.accessToken;
 
-  if (!token) {
+  if (!accessToken) {
     res.status(401).json({ message: "Chưa đăng nhập" });
     return;  
   }
 
   try {
     const jwt = new Jwt();
-    const { payload }: any = await jwt.verifyToken(token);
+    const { payload }: any = await jwt.verifyToken(accessToken);
 
     if (!payload?.user) {
       throw new Error("Token không chứa user");

@@ -1,6 +1,7 @@
 import { jwtVerify } from "jose";
 import jwt from "jsonwebtoken";
 import { UserType } from "../types/interface/IUser";
+import { tokenToString } from "typescript";
 
 class Jwt {
   private secret: string;
@@ -10,11 +11,15 @@ class Jwt {
   }
 
   generateToken(user : UserType) {
-    const token = jwt.sign({ user }, this.secret, {
+    const accessToken = jwt.sign({ user }, this.secret, {
+      expiresIn: "1d",
+    });
+
+    const refreshToken  = jwt.sign({ user }, this.secret, {
       expiresIn: "30d",
     });
 
-    return token;
+    return { accessToken, refreshToken};
   }
 
   async verifyToken(token: string) {

@@ -5,7 +5,8 @@ import productRouter from "./routers/productRouter";
 import consumeMessage from "./utils/consumeMessage";
 import { errorHandler } from "./middlewares/errMiddlware";
 import cookieParser from "cookie-parser";
-
+import { seedProduct } from "./script";
+import cors from "cors";
 
 config();
 dbConnect();
@@ -15,15 +16,17 @@ const app = express();
 const PORT = process.env.PORT || 7002;
 const apiRoot = process.env.API_ROOT || "/api/product-service";
 
+app.use(cors())
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use(apiRoot, productRouter);
 
-
 app.use(errorHandler);  
-
+// (async() => {
+//   await seedProduct()
+// })()
 process.on("unhandledRejection", (reason, promise) => {
   console.error(" Unhandled Rejection:", reason);
 });

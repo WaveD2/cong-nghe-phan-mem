@@ -21,8 +21,6 @@ app.use(cookieParser());
 app.use(authMid);
 
 app.use(apiRoot, orderRoute);
-
-
 app.use(errorHandler);  
 
 process.on("unhandledRejection", (reason, promise) => {

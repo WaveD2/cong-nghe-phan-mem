@@ -36,9 +36,9 @@ class MessageBroker implements IKafka {
       console.error("Failed to connect Kafka producer:", error);
     }
   }
-
-  //  Publish Kafka Fun :-
-
+  async connect() {
+    await this.producer.connect();
+  }
   async publish(
     topic: TOPIC_TYPE,
     message: messageType,

@@ -1,0 +1,76 @@
+.billing_form .form_group input {
+    border: 1px solid var(--card-bg-02);
+}
+
+.check_cart {
+    padding: 20px;
+    background-color: var(--primary-color);
+    color: #fff;
+    border-radius: 6px;
+}
+.check_cart h6,
+h3 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.check_cart h6 {
+    margin-bottom: 20px;
+}
+.check_cart h3 {
+    border-top: 1px solid #615f5f;
+    padding-top: 20px;
+}
+
+.wrapper_abate {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    justify-content: center;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.2);
+    z-index: 999;
+}
+.wrapper_abate.isActive {
+    display: flex;
+}
+.box_abate-error {
+    background-color: #ec8a8a;
+    padding: 4px;
+    border-radius: 4px;
+    text-align: center;
+    line-height: 30px;
+}
+.box_abate {
+    position: relative;
+    max-width: 600px;
+    padding: 20px 24px;
+    background-color: #615f5f;
+}
+.box_abate-infor {
+    margin-top: 12px;
+    display: flex;
+    gap: 20px;
+}
+.box_abate-infor-bank span {
+    font-size: 18px;
+    color: var(--card-bg-01);
+    margin: 4px 0;
+    display: inline-block;
+}
+.box_abate-info-zalo img {
+    max-width: 300px;
+    flex-grow: 2;
+    border-radius: 4px;
+}
+.abate_close {
+    position: absolute;
+    top: -6px;
+    right: 0;
+    font-size: 30px;
+    color: var(--primary-color);
+    cursor: pointer;
+}
