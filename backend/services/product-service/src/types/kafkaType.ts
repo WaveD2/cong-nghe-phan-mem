@@ -6,6 +6,8 @@ export enum ProductEvent {
   CREATE = "CREATE",
   UPDATE = "UPDATE",
   DELETE = "DELETE",
+  UPSERT = "UPSERT",
+  INSERT = "INSERT",
 }
 
 export type TOPIC_TYPE =

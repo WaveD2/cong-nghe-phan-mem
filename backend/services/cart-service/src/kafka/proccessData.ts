@@ -68,14 +68,24 @@ const upsertDocument = async <T>(id: string | ObjectId, data: Partial<T>, model:
   }
 };
 
+const insertManyDocument = async <T>(data: Partial<T>, model: Model<T>): Promise<void> => {
+  try {
+    const records = await model.insertMany(data);
+    console.log(`[insertManyDocument] ${model.modelName}`);
+  } catch (error) {
+    console.error(`[insertManyDocument] ${model.modelName} error`, (error as Error).message);
+  }
+};
+
 /**
  * Handle Kafka event based on payload
  */
 const handleEvent = async <T>(payload: TPayload<T>, model: Model<T>): Promise<void> => {
   const { event, message } = payload;
+
   const id = message.data._id as string | ObjectId;
 
-  if (!id) {
+  if (!id && event !== Event.INSERT) {
     console.warn(`[Invalid Payload] Missing _id in ${model.modelName} message`);
     return;
   }
@@ -93,6 +103,9 @@ const handleEvent = async <T>(payload: TPayload<T>, model: Model<T>): Promise<vo
     case Event.UPSERT:
       await upsertDocument(id, message.data, model);
       break;
+    case Event.INSERT:
+        await insertManyDocument( message.data, model);
+        break;
     default:
       console.warn(`[Unknown Event] ${event} for ${model.modelName}`);
   }

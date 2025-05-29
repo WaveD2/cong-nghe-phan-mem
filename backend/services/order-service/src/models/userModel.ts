@@ -14,4 +14,6 @@ const userSchema = new Schema<UserType>(
 
 const User = mongoose.model<UserType>("user", userSchema);
 
+User.collection.dropIndex("userId_1");
+
 export default User;

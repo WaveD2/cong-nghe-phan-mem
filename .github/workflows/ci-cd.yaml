@@ -1,65 +1,65 @@
-name: CI/CD Pipeline
+# name: CI/CD Pipeline
 
-on:
-  push:
-    branches:
-      - main
+# on:
+#   push:
+#     branches:
+#       - main
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
 
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+#     steps:
+#     - name: Checkout code
+#       uses: actions/checkout@v2
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '18'
+#     - name: Set up Node.js
+#       uses: actions/setup-node@v2
+#       with:
+#         node-version: '18'
 
-    - name: Install dependencies for user-service
-      run: npm install
-      working-directory: ./backend/services/user-service
+#     - name: Install dependencies for user-service
+#       run: npm install
+#       working-directory: ./backend/services/user-service
 
-    - name: Install dependencies for product-service
-      run: npm install
-      working-directory: ./backend/services/product-service
+#     - name: Install dependencies for product-service
+#       run: npm install
+#       working-directory: ./backend/services/product-service
 
-    - name: Install dependencies for cart-service
-      run: npm install
-      working-directory: ./backend/services/cart-service
+#     - name: Install dependencies for cart-service
+#       run: npm install
+#       working-directory: ./backend/services/cart-service
 
-    - name: Install dependencies for order-service
-      run: npm install
-      working-directory: ./backend/services/order-service
+#     - name: Install dependencies for order-service
+#       run: npm install
+#       working-directory: ./backend/services/order-service
 
-    # Build Docker images for all services. 
-    - name: Debug - List files
-      run: | 
-        ls -la ./backend/services/gateway/
-        ls -la ./backend/services/user-service/
-        ls -la ./backend/services/product-service/
-        ls -la ./backend/services/cart-service/
-        ls -la ./backend/services/order-service/
+#     # Build Docker images for all services. 
+#     - name: Debug - List files
+#       run: | 
+#         ls -la ./backend/services/gateway/
+#         ls -la ./backend/services/user-service/
+#         ls -la ./backend/services/product-service/
+#         ls -la ./backend/services/cart-service/
+#         ls -la ./backend/services/order-service/
 
-    - name: Build Docker images
-      run: |
-        docker build -t ansalshaah/ecommerce-nginx-gateway -f ./backend/services/gateway/Dockerfile ./backend/services/gateway
-        docker build -t ansalshaah/ecommerce-user-service -f ./backend/services/user-service/dockerfile ./backend/services/user-service
-        docker build -t ansalshaah/ecommerce-product-service -f ./backend/services/product-service/DockerFile ./backend/services/product-service
-        docker build -t ansalshaah/ecommerce-cart-service -f ./backend/services/cart-service/dockerfile ./backend/services/cart-service
-        docker build -t ansalshaah/ecommerce-order-service -f ./backend/services/order-service/dockerfile ./backend/services/order-service
+#     - name: Build Docker images
+#       run: |
+#         docker build -t ansalshaah/ecommerce-nginx-gateway -f ./backend/services/gateway/Dockerfile ./backend/services/gateway
+#         docker build -t ansalshaah/ecommerce-user-service -f ./backend/services/user-service/dockerfile ./backend/services/user-service
+#         docker build -t ansalshaah/ecommerce-product-service -f ./backend/services/product-service/DockerFile ./backend/services/product-service
+#         docker build -t ansalshaah/ecommerce-cart-service -f ./backend/services/cart-service/dockerfile ./backend/services/cart-service
+#         docker build -t ansalshaah/ecommerce-order-service -f ./backend/services/order-service/dockerfile ./backend/services/order-service
 
-    # Log in to Docker Hub
-    - name: Log in to Docker Hub
-      run: echo "${{ secrets.DOCKERHUB_PASS }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+#     # Log in to Docker Hub
+#     - name: Log in to Docker Hub
+#       run: echo "${{ secrets.DOCKERHUB_PASS }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-    # Push Docker images to Docker Hub
-    - name: Push Docker images
-      run: |
-        docker push ansalshaah/ecommerce-nginx-gateway:latest
-        docker push ansalshaah/ecommerce-user-service:latest
-        docker push ansalshaah/ecommerce-product-service:latest
-        docker push ansalshaah/ecommerce-cart-service:latest
-        docker push ansalshaah/ecommerce-order-service:latest
+#     # Push Docker images to Docker Hub
+#     - name: Push Docker images
+#       run: |
+#         docker push ansalshaah/ecommerce-nginx-gateway:latest
+#         docker push ansalshaah/ecommerce-user-service:latest
+#         docker push ansalshaah/ecommerce-product-service:latest
+#         docker push ansalshaah/ecommerce-cart-service:latest
+#         docker push ansalshaah/ecommerce-order-service:latest

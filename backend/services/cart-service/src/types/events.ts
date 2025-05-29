@@ -3,4 +3,5 @@ export enum Event {
   UPDATE = "UPDATE",
   DELETE = "DELETE",
   UPSERT = "UPSERT",
+  INSERT = "INSERT",
 }

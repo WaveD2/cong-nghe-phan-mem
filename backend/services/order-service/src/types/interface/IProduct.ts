@@ -6,4 +6,7 @@ export default interface ProductType extends Document {
   price: number;
   stock: number;
   img: string;
+  category: string;
+  categorySlug: string;
+  sold: number;
 }

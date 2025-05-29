@@ -6,6 +6,8 @@ import { authMid } from './middlewares/authMiddlware';
 import cartRouter from './routers/cartRouter';
 import consumeMessage from './utils/consumeMessage';
 import { errorHandler } from './middlewares/errMiddlware';
+import cors from "cors";
+import Product from './models/productModel';
 
 config()
 dbConnect();
@@ -15,6 +17,8 @@ const app = express();
 const PORT = process.env.PORT || 7003;
 const apiRoot = process.env.API_ROOT || "/api/cart-service";
 
+
+app.use(cors())
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser())
@@ -22,6 +26,9 @@ app.use(authMid);
 
 app.use(apiRoot, cartRouter);
 
+( async ()=>{
+  await Product.deleteMany({})
+})()
 
 app.use(errorHandler);  
 

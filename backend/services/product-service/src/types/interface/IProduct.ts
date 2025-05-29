@@ -6,4 +6,7 @@ export interface ProductType extends Document {
   price: Number;
   stock: Number;
   img: String;
+  category: String;
+  categorySlug: String;
+  sold: Number;
 }

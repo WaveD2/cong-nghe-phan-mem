@@ -24,9 +24,9 @@ app.use(cookieParser());
 app.use(apiRoot, productRouter);
 
 app.use(errorHandler);  
-// (async() => {
-//   await seedProduct()
-// })()
+(async() => {
+  await seedProduct()
+})()
 process.on("unhandledRejection", (reason, promise) => {
   console.error(" Unhandled Rejection:", reason);
 });
