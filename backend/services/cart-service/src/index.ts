@@ -18,7 +18,10 @@ const PORT = process.env.PORT || 7003;
 const apiRoot = process.env.API_ROOT || "/api/cart-service";
 
 
-app.use(cors())
+app.use(cors({
+  origin: 'http://localhost:5173', // chỉ định origin cụ thể
+  credentials: true, 
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser())

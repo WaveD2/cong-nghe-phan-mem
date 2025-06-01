@@ -3,7 +3,7 @@ import Cart from "../models/cartModel";
 import Product from "../models/productModel";
 import User from "../models/userModel";
 import ICart from "../types/interface/ICart";
-import IProduct from "../types/interface/IProduct";
+import {IProduct} from "../types/interface/IProduct";
 import iUser from "../types/interface/IUser";
 
 const consumeMessage = () => {

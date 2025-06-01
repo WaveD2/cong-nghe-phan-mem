@@ -12,10 +12,13 @@ const OrderItemSchema = new Schema<IOrderItem>({
   price: { type: Number, required: true },
   status: {
     type: String,
-    enum: ["Pending", "Shipped", "Delivered", "Cancelled"],
+    enum: ["Pending", "Shipped", "Delivered", "Cancelled" , "Completed"],
     default: "Pending",
   },
 });
+
+OrderItemSchema.index({ productId: 1, status: 1 });
+
 
 const AddressSchema = new Schema<IAddress>({
   street: { type: String, required: true },
@@ -38,7 +41,7 @@ const orderSchema = new Schema<IOrder>(
     },
     status: {
       type: String,
-      enum: ["Pending", "Shipped", "Delivered", "Cancelled"],
+      enum: ["Pending", "Shipped", "Delivered", "Cancelled", "Completed"],
       default: "Pending",
     },
     paymentMethod: {
@@ -47,9 +50,24 @@ const orderSchema = new Schema<IOrder>(
     },
     isDelivered: { type: Boolean, default: false },
     isPaid: { type: Boolean, default: false },
+    orderDate: {
+      type: Date,
+      default: Date.now,
+    },
+    shippedDate: {
+      type: Date,
+      default: null,
+    },
+    deliveryDate: {
+      type: Date,
+      required: true,
+    },
   },
   { timestamps: true }
 );
+
+orderSchema.index({ userId: 1, status: 1 });
+
 
 const Order = mongoose.model<IOrder>("order", orderSchema);
 

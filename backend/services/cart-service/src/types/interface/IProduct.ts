@@ -1,12 +1,18 @@
-import { Document } from "mongoose";
+import {  Document } from 'mongoose';
 
-export default interface ProductType extends Document {
-  name: string;
+export interface IProduct extends Document {
+  title: string;
   description: string;
+  category: string;
   price: number;
+  discount: number;
+  discountedPrice?: number;
   stock: number;
-  img :string;
-  category: { type: String, required: true },
-  categorySlug: { type: String, required: true },
-  sold: { type: Number, default: 0 };
+  tags: string[];
+  brand: string;
+  sku?: string;
+  images: string[];
+  thumbnail?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }

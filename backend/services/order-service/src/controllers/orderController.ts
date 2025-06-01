@@ -2,7 +2,7 @@ import { Response, NextFunction } from "express";
 import { Model, Types } from "mongoose";
 import { AuthRequest } from "../types/api";
 import ICart from "../types/interface/ICart";
-import IProduct from "../types/interface/IProduct";
+import {IProduct} from "../types/interface/IProduct";
 import { IOrder } from "../types/interface/IOrder";
 import Cart from "../models/cartModel";
 import Product from "../models/productModel";
@@ -95,7 +95,7 @@ class OrderController {
         }
         if (product.stock < item.quantity) {
           res.status(400).json({
-            message: `${ERROR_MESSAGES.INSUFFICIENT_STOCK}: ${product.name}`,
+            message: `${ERROR_MESSAGES.INSUFFICIENT_STOCK}: ${product.title}`,
           });
           return;
         }
@@ -106,7 +106,7 @@ class OrderController {
         orderItems.push({
           //@ts-ignore
           productId: item.productId,
-          name: product.name,
+          name: product.title,
           quantity: item.quantity,
           price: productPrice,
         });

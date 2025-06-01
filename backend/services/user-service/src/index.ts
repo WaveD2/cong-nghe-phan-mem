@@ -12,10 +12,14 @@ const app = express();
 const PORT = process.env.PORT || 7001;
 const apiRoot = process.env.API_ROOT || "/api/user-service";
 
+app.use(cors({
+  origin: 'http://localhost:5173', // chỉ định origin cụ thể
+  credentials: true, 
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(cors())
 
 app.use(apiRoot, userRoute);
 

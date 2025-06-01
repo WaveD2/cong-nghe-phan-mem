@@ -9,6 +9,8 @@ import { UserEvent } from "../types/kafkaTypes";
 import { AuthRequest } from "../types/api";
 import { OAuth2Client } from "google-auth-library";
 import admin from "./firebase";
+import { userLoginValidator, userValidator } from "./validate";
+import { z } from "zod";
 
 
 class UserController {
@@ -29,27 +31,34 @@ class UserController {
 
   async registerUser(req: Request, res: Response, next: NextFunction): Promise<any> {
     try {
-      const { name, email, password, role = "user", avatar } = req.body;
+      const validated = userValidator.parse(req.body);
 
-      const exist = await this.UserModel.findOne({ email });
+      const exist = await this.UserModel.findOne({ email: validated.email });
       
       if (exist) {
         return res.status(400).json({ success: false, message: "Người dùng đã tồn tại" });
       }
 
-      const hashPassword = await bcryptjs.hash(password, 10);
-      const newUser = new this.UserModel({ name, email, password: hashPassword, role, avatar });
+      const hashPassword = await bcryptjs.hash(validated.password, 10);
+      validated.password = hashPassword;
+
+      const newUser = new this.UserModel(validated);
 
       await newUser.save();
 
       await this.Kafka.publish("User-Topic", { data: newUser }, UserEvent.CREATE);
 
+      const { password: _, ...record } = newUser.toObject();
+
       res.status(201).json({
         success: true,
         message: "Tạo người dùng thành công",
-        data: newUser,
+        data: record,
       });
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ errors: error.errors });
+      }
       next(error);
     }
   }
@@ -78,14 +87,14 @@ class UserController {
 
   async login(req: Request, res: Response, next: NextFunction) : Promise<any> {
     try {
-      const { email, password } = req.body;
-      const user = await this.UserModel.findOne({ email });
+      const result = userLoginValidator.parse(req.body);
+      const user = await this.UserModel.findOne({ email: result.email });
 
       if (!user) {
         return res.status(400).json({ success: false, message: "Người dùng không tồn tại" });
       }
 
-      const validPassword = await bcryptjs.compare(String(password), user.password);
+      const validPassword = await bcryptjs.compare(String(result.password), user.password);
       if (!validPassword) {
         return res.status(400).json({ success: false, message: "Password không chính xác" });
       }
@@ -136,17 +145,14 @@ class UserController {
 
   async update(req: AuthRequest, res: Response, next: NextFunction) :Promise<any> {
     try {
-      const data = req.body;
-      if (!data || Object.keys(data).length === 0) {
-        return res.status(400).json({ success: false, message: "Không có dữ liệu để cập nhật" });
-      }
-
-      const userId = req.user?.id || req.user?._id;
+     
+      const validated = userValidator.parse(req.body);
+      const userId = req.params?.id 
       if (!userId) {
         return res.status(401).json({ success: false, message: "Không xác thực được người dùng" });
       }
 
-      const user = await this.UserModel.findByIdAndUpdate(userId, data, { new: true });
+      const user = await this.UserModel.findByIdAndUpdate(userId, validated, { new: true });
       if (!user) {
         return res.status(404).json({ success: false, message: "Người dùng không tồn tại" });
       }
@@ -160,18 +166,43 @@ class UserController {
         data: record,
       });
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ errors: error.errors });
+      }
       next(error);
     }
   }
 
   async getAll(req: Request, res: Response, next: NextFunction): Promise<any> {
     try {
-      const limit = Number(req.query.limit) || 10;
-      const users = await this.UserModel.find().limit(limit);
-
+      const { limit = 10, page = 1, name } = req.query;
+  
+      const pageSize = Number(limit);
+      const currentPage = Number(page);
+  
+      const filter: any = {};
+  
+      if (name) {
+        filter.name = { $regex: name, $options: 'i' }; // tìm tên không phân biệt hoa thường
+      }
+  
+      const total = await this.UserModel.countDocuments(filter);
+      const users = await this.UserModel
+        .find(filter)
+        .limit(pageSize)
+        .skip((currentPage - 1) * pageSize)
+        .exec();
+  
       res.status(200).json({
         success: true,
         data: users,
+        pagination: {
+          total,
+          totalCurrent: users.length,
+          limit: pageSize,
+          page: currentPage,
+          totalPages: Math.ceil(total / pageSize),
+        },
       });
     } catch (error) {
       next(error);

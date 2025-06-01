@@ -6,7 +6,7 @@ const userSchema = new Schema<UserType>(
     name: { type: String, required: true },
     email: { type: String, required: true },
     password: { type: String, required: true },
-    role: { type: String, default: "user" },
+    role: { type: String, default: "user" }, //admin || user
     avatar: { type: String, default: "https://images.pexels.com/photos/13288544/pexels-photo-13288544.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" },
   },
   {

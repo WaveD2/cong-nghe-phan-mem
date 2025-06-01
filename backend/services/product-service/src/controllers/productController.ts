@@ -1,9 +1,11 @@
-import { Model } from "mongoose";
+import { FilterQuery, Model } from "mongoose";
 import { Request, Response, NextFunction } from "express";
 import Product from "../models/productModel";
-import { ProductType } from "../types/interface/IProduct";
+import { IProduct } from "../types/interface/IProduct";
 import MessageBroker from "../utils/messageBroker";
 import { ProductEvent } from "../types/kafkaType";
+import { productValidator } from "./validate";
+import { z } from "zod";
 
 const ERROR_MESSAGES = {
   MISSING_FIELDS: "Thiếu trường thông tin",
@@ -15,7 +17,7 @@ const ERROR_MESSAGES = {
 const DEFAULT_LIMIT = 10;
 
 class ProductController {
-  private readonly ProductModel: Model<ProductType>;
+  private readonly ProductModel: Model<IProduct>;
   private readonly kafka: MessageBroker;
 
   constructor() {
@@ -24,7 +26,7 @@ class ProductController {
   }
 
   private async publishToKafka(
-    product: ProductType,
+    product: IProduct,
     event: ProductEvent
   ): Promise<void> {
     try {
@@ -42,32 +44,26 @@ class ProductController {
     return true;
   }
 
-  addProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  addProduct = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
-      const { name, description, price, stock } = req.body;
+      const validated = productValidator.parse(req.body);
 
-      if (!name || !description || price == null || stock == null) {
-        res.status(400).json({ message: ERROR_MESSAGES.MISSING_FIELDS });
-        return;
-      }
-
-      const existingProduct = await this.ProductModel.findOne({ name });
+      const existingProduct = await this.ProductModel.findOne({ title : validated.title , sku : validated.sku   });
       if (existingProduct) {
         res.status(409).json({ message: ERROR_MESSAGES.PRODUCT_EXISTS });
         return;
       }
 
-      const newProduct = await this.ProductModel.create({
-        name: name.trim(),
-        description: description.trim(),
-        price: Number(price),
-        stock: Number(stock),
-      });
+      const newProduct = new Product(validated);
+      const record = await newProduct.save();
 
-      await this.publishToKafka(newProduct, ProductEvent.CREATE);
+      await this.publishToKafka(record, ProductEvent.CREATE);
 
-      res.status(201).json({ message: "Thêm sản phẩm thành công", data: newProduct });
+      res.status(201).json({ message: "Thêm sản phẩm thành công", data: record });
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
       next(error);
     }
   };
@@ -82,18 +78,11 @@ class ProductController {
         res.status(404).json({ message: ERROR_MESSAGES.PRODUCT_NOT_FOUND });
         return;
       }
-
-      const { name, description, price, stock } = req.body;
-      const updates: Partial<ProductType> = {
-        ...(name && { name: name.trim() }),
-        ...(description && { description: description.trim() }),
-        ...(price != null && { price: Number(price) }),
-        ...(stock != null && { stock: Number(stock) }),
-      };
+      const validated = productValidator.parse(req.body);
 
       const updatedProduct = await this.ProductModel.findByIdAndUpdate(
         id,
-        { $set: updates },
+        { $set: validated },
         { new: true }
       );
 
@@ -143,14 +132,75 @@ class ProductController {
 
   listProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const limit = Number(req.query.limit) || DEFAULT_LIMIT;
-      const products = await this.ProductModel.find().limit(Math.max(1, limit));
-
-      res.status(200).json({ data: products });
+      const {
+        title,
+        price,
+        category,
+        discount,
+        tags,
+        brands,
+        limit = 10,
+        page = 1
+      }: any = req.query;
+  
+      const filter: FilterQuery<IProduct> = {};
+  
+      if (title) {
+        filter.title = { $regex: title, $options: 'i' };
+      }
+  
+      if (price) {
+        const priceRange = price.split('-').map(Number);
+        if (priceRange.length === 2) {
+          filter.price = { $gte: priceRange[0], $lte: priceRange[1] };
+        } else {
+          filter.price = { $gte: priceRange[0] };
+        }
+      }
+  
+      if (category) {
+        filter.category = category;
+      }
+  
+      if (discount) {
+        filter.discount = { $gte: Number(discount) };
+      }
+  
+      if (tags) {
+        filter.tags = { $in: tags.split(',') };
+      }
+  
+      if (brands) {
+        filter.brand = { $in: brands.split(',') };
+      }
+  
+      const pageSize = Math.max(1, Number(limit));
+      const currentPage = Math.max(1, Number(page));
+      const skip = (currentPage - 1) * pageSize;
+  
+      const total = await this.ProductModel.countDocuments(filter);
+      const products = await this.ProductModel
+        .find(filter)
+        .skip(skip)
+        .limit(pageSize)
+        .exec();
+  
+      res.status(200).json({
+        success: true,
+        data: products,
+        pagination: {
+          total,
+          page: currentPage,
+          limit: pageSize,
+          totalCurrent: products.length,
+          totalPages: Math.ceil(total / pageSize),
+        },
+      });
     } catch (error) {
       next(error);
     }
   };
+  
 }
 
 export default ProductController;

@@ -1,0 +1,68 @@
+import { useState } from "react"
+import { ShoppingCart, Plus, Minus } from "lucide-react"
+import apiClient from "../../helper/axios"
+import { useToast } from "../../../context/toastContext"
+
+const AddToCartButton = ({ productId, onAddToCart }) => {
+  const [isAdding, setIsAdding] = useState(false)
+  const [quantity, setQuantity] = useState(1)
+  const { showToast } = useToast()
+
+  const incrementQuantity = () => setQuantity((prev) => Math.min(prev + 1, 99))
+  const decrementQuantity = () => setQuantity((prev) => Math.max(prev - 1, 1))
+
+  const handleAddToCart = async () => {
+    setIsAdding(true)
+    try {
+      
+     console.log("productId",productId)
+      const response=await apiClient.post('/cart',{productId, quantity})
+      console.log(response.data)
+      // alert(response.data.message)
+      showToast(response.data.message, "success")
+    } catch (error) {
+      console.error(error)
+      if(error.response.status===401)  return alert("Please Login First!!!")
+       return  showToast(error.response.data.message, "error")
+
+      
+    } finally {
+      setIsAdding(false)
+    }
+  }
+
+  return (
+    <div className="flex items-center space-x-2">
+      <div className="flex items-center border border-gray-300 rounded-l-full overflow-hidden">
+        <button
+          className="p-2 hover:bg-gray-100 transition-colors disabled:opacity-50"
+          onClick={decrementQuantity}
+          disabled={isAdding}
+        >
+          <Minus className="h-4 w-4" />
+          <span className="sr-only">Giảm</span>
+        </button>
+        <span className="w-10 text-center font-medium">{quantity}</span>
+        <button
+          className="p-2 hover:bg-gray-100 transition-colors disabled:opacity-50"
+          onClick={incrementQuantity}
+          disabled={isAdding}
+        >
+          <Plus className="h-4 w-4" />
+          <span className="sr-only">Tăng</span>
+        </button>
+      </div>
+      <button
+        className="flex items-center gap-2 md:text-sm text-base  rounded-r-full px-2 h-10 bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50"
+        onClick={handleAddToCart}
+        disabled={isAdding}
+      >
+        <ShoppingCart className="h-4"  />
+          <span style={{textTransform:"none"}}>{isAdding ? "Đang xử lý..." : "Thêm vào giỏ"}</span>
+      </button>
+    </div>
+  )
+}
+
+export default AddToCartButton
+

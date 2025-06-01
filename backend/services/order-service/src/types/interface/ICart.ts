@@ -1,5 +1,5 @@
 import { Document, Types } from "mongoose";
-import IProduct from "./IProduct";
+import {IProduct} from "./IProduct";
 import IUser from "./IUser";
 
 export interface CartItem {

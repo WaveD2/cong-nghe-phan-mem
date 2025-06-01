@@ -14,7 +14,7 @@ userRoute.put("/:id", authMid, userController.update.bind(userController));
 userRoute.post("/refreshToken", userController.refreshToken.bind(userController)); 
 userRoute.post("/login-email", userController.loginWithGoogle.bind(userController)); 
 userRoute.post("/logout", userController.logout.bind(userController)); 
-
+userRoute.post("/verifyme", authMid, (req : any,res)=>{res.status(200).json({ success: true, user: req.user});})
 
 userRoute.get("/", authMid, autAdminMid, userController.getAll.bind(userController))
 

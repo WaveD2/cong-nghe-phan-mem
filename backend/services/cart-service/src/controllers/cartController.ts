@@ -1,7 +1,7 @@
 import { Response } from "express";
 import { Model, Types } from "mongoose";
 import { AuthRequest } from "../types/api";
-import IProduct from "../types/interface/IProduct";
+import {IProduct} from "../types/interface/IProduct";
 import ICart from "../types/interface/ICart";
 import Product from "../models/productModel";
 import Cart from "../models/cartModel";

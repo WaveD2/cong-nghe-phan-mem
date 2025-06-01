@@ -17,7 +17,10 @@ const app = express();
 const PORT = process.env.PORT || 7004;
 const apiRoot = process.env.API_ROOT || "/api/order-service";
 
-app.use(cors())
+app.use(cors({
+  origin: 'http://localhost:5173', // chỉ định origin cụ thể
+  credentials: true, 
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
