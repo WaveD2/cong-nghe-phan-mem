@@ -56,7 +56,7 @@ function AdminLayout() {
           {!isSidebarOpen ? (
             <MdAdminPanelSettings />
           ) : (
-            "Admin Panel"
+            "Quản lý"
           )}
         </h2>
 
@@ -71,7 +71,7 @@ function AdminLayout() {
               {!isSidebarOpen ? (
                 <MdDashboardCustomize />
               ) : (
-                "Dashboard"
+                "Thống kê"
               )}
             </NavLink>
           </li>
@@ -84,7 +84,7 @@ function AdminLayout() {
                 // <img src="/public/admin/product.png" className="w-5 h-5" />
                 <MdOutlineProductionQuantityLimits />
               ) : (
-                "Manage Products"
+                "Quản lý sản phẩm"
               )}
             </NavLink>
           </li>
@@ -96,7 +96,7 @@ function AdminLayout() {
               {!isSidebarOpen ? (
                 <FaUsersCog />
               ) : (
-                "Manage Users"
+                "Quản lý người dùng"
               )}
             </NavLink>
           </li>
@@ -110,7 +110,7 @@ function AdminLayout() {
                 <MdManageHistory />
                 
               ) : (
-                "Manage Orders"
+                "Quản lý đặt hàng"
               )}
             </NavLink>
           </li>

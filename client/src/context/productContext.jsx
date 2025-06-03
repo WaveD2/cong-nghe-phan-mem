@@ -1,10 +1,80 @@
-import  { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import { createContext, useState, useEffect, useContext, useCallback, useRef, useMemo } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import apiClient from '../components/helper/axios';
 import { useToast } from './toastContext';
 
 const ProductContext = createContext();
 
+// Constants
+const DEFAULT_FILTERS = {
+  title: '',
+  price: '',
+  category: '',
+  discount: null,
+  tags: '',
+  brands: '',
+  page: 1,
+  limit: 12,
+};
+
+const FILTER_KEYS = Object.keys(DEFAULT_FILTERS);
+const SELECTABLE_FILTERS = ['category', 'tags', 'brands'];
+
+// Helper functions
+const parseUrlFilters = (searchParams) => {
+  const urlFilters = {};
+  
+  FILTER_KEYS.forEach(key => {
+    const value = searchParams.get(key);
+    if (value !== null && value !== '') {
+      if (key === 'page' || key === 'limit') {
+        urlFilters[key] = Number(value) || DEFAULT_FILTERS[key];
+      } else if (key === 'discount') {
+        urlFilters[key] = Number(value) || null;
+      } else {
+        urlFilters[key] = value;
+      }
+    } else {
+      urlFilters[key] = DEFAULT_FILTERS[key];
+    }
+  });
+  
+  return urlFilters;
+};
+
+const buildUrlParams = (filters) => {
+  const params = new URLSearchParams();
+  
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== '' && value !== null && value !== undefined) {
+      if (key === 'page' && value === 1) return;
+      if (key === 'limit' && value === 12) return;
+      
+      params.set(key, String(value));
+    }
+  });
+  
+  return params;
+};
+
+const cleanFiltersForApi = (filters) => {
+  return Object.entries(filters).reduce((acc, [key, value]) => {
+    if (value !== '' && value !== null && value !== undefined) {
+      acc[key] = value;
+    }
+    return acc;
+  }, {});
+};
+
+const hasValidFilters = (filters) => {
+  return Object.values(cleanFiltersForApi(filters)).length > 0;
+};
+
+const filtersEqual = (filters1, filters2) => {
+  return JSON.stringify(filters1) === JSON.stringify(filters2);
+};
+
+// Custom hook
 export const useProducts = () => {
   const context = useContext(ProductContext);
   if (!context) {
@@ -16,61 +86,22 @@ export const useProducts = () => {
 const ProductProvider = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { showToast } = useToast();
+  
+  // State
   const [products, setProducts] = useState([]);
   const [adminProducts, setAdminProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [isSelected, setIsSelected] = useState([]);
-  const { showToast } = useToast();
-  const [searchParams, setSearchParams] = useSearchParams();
   
-  const [filters, setFilters] = useState({
-    title: '',
-    price: '',
-    category: '',
-    discount: null,
-    tags: '',
-    brands: '',
-    page: 1,
-    limit: 12,
-  });
+  // Refs
+  const lastApiFiltersRef = useRef(null);
+  const fetchTimeoutRef = useRef(null);
 
-  // Helper function to parse URL parameters to filters
-  const parseUrlToFilters = useCallback(() => {
-    const urlFilters = {
-      title: searchParams.get('title') || '',
-      price: searchParams.get('price') || '',
-      category: searchParams.get('category') || '',
-      discount: searchParams.get('discount') ? Number(searchParams.get('discount')) : null,
-      tags: searchParams.get('tags') || '',
-      brands: searchParams.get('brands') || '',
-      page: Number(searchParams.get('page')) || 1,
-      limit: Number(searchParams.get('limit')) || 12,
-    };
-    
-    return urlFilters;
-  }, [searchParams]);
-
-  // Helper function to update URL with filters
-  const updateUrlWithFilters = useCallback((newFilters) => {
-    const params = new URLSearchParams();
-    
-    Object.entries(newFilters).forEach(([key, value]) => {
-      if (value !== '' && value !== null && value !== undefined && value !== 0) {
-        if (key === 'page' && value === 1) return; // Don't show page=1 in URL
-        params.set(key, String(value));
-      }
-    });
-
-    const newSearch = params.toString();
-    const currentSearch = searchParams.toString();
-    
-    if (newSearch !== currentSearch) {
-      setSearchParams(params, { replace: true });
-    }
-  }, [searchParams, setSearchParams]);
-
+  // Error handling
   const handleApiError = useCallback((error, defaultMessage) => {
     console.error(defaultMessage, error);
     
@@ -78,14 +109,11 @@ const ProductProvider = ({ children }) => {
     
     if (error.response?.data) {
       const errorData = error.response.data;
-      
       if (errorData.issues && Array.isArray(errorData.issues)) {
         errorMessage = errorData.issues.map(issue => issue.message).join(', ');
-      }
-      else if (errorData.message) {
+      } else if (errorData.message) {
         errorMessage = errorData.message;
-      }
-      else if (errorData.errors && Array.isArray(errorData.errors)) {
+      } else if (errorData.errors && Array.isArray(errorData.errors)) {
         errorMessage = errorData.errors.join(', ');
       }
     }
@@ -95,33 +123,47 @@ const ProductProvider = ({ children }) => {
     return errorMessage;
   }, [showToast]);
 
-  useEffect(() => {
-    const urlFilters = parseUrlToFilters();
-    setFilters(urlFilters);
+  // Update URL
+  const updateUrl = useCallback((newFilters) => {
+    const params = buildUrlParams(newFilters);
+    const newSearch = params.toString();
+    const currentSearch = searchParams.toString();
     
+    if (newSearch !== currentSearch) {
+      setSearchParams(params, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
+  // Update selected items
+  const updateSelectedItems = useCallback((currentFilters) => {
     const selectedItems = [];
-    Object.entries(urlFilters).forEach(([key, value]) => {
-      if (value && ['category', 'tags', 'brands'].includes(key)) {
-        selectedItems.push(value);
+    SELECTABLE_FILTERS.forEach(key => {
+      if (currentFilters[key] && currentFilters[key] !== '') {
+        selectedItems.push(currentFilters[key]);
       }
     });
     setIsSelected(selectedItems);
-  }, [location.pathname, parseUrlToFilters]);
- 
+  }, []);
+
+  // Fetch products
   const fetchProducts = useCallback(async (customFilters = null) => {
+    const filterParams = customFilters || filters;
+    const cleanFilters = cleanFiltersForApi(filterParams);
+    
+    if (!hasValidFilters(filterParams)) {
+      setProducts([]);
+      return [];
+    }
+    
+    if (lastApiFiltersRef.current && filtersEqual(cleanFilters, lastApiFiltersRef.current)) {
+      return products;
+    }
+    
     try {
       setLoading(true);
       setError(null);
+      lastApiFiltersRef.current = cleanFilters;
       
-      const filterParams = customFilters || filters;
-      
-      const cleanFilters = Object.entries(filterParams).reduce((acc, [key, value]) => {
-        if (value !== '' && value !== null && value !== undefined) {
-          acc[key] = value;
-        }
-        return acc;
-      }, {});
-
       const response = await apiClient.get('/api/product-service', { 
         params: cleanFilters 
       });
@@ -131,89 +173,121 @@ const ProductProvider = ({ children }) => {
         return response.data;
       }
       
+      return [];
     } catch (err) {
+      lastApiFiltersRef.current = null;
       handleApiError(err, 'Error fetching products');
       return [];
     } finally {
       setLoading(false);
     }
-  }, [filters, handleApiError]);
+  }, [filters, products, handleApiError]);
+
+  // Debounced fetch
+  const debouncedFetchProducts = useCallback((customFilters = null) => {
+    if (fetchTimeoutRef.current) {
+      clearTimeout(fetchTimeoutRef.current);
+    }
+    
+    fetchTimeoutRef.current = setTimeout(() => {
+      fetchProducts(customFilters);
+    }, 300);
+  }, [fetchProducts]);
+
+  // Initialize filters from URL
+  const urlFilters = useMemo(() => parseUrlFilters(searchParams), [searchParams]);
 
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      fetchProducts();
-    }, 300); 
+    if (!filtersEqual(urlFilters, filters)) {
+      setFilters(urlFilters);
+    }
+    updateSelectedItems(urlFilters);
+    
+    if (hasValidFilters(urlFilters)) {
+      debouncedFetchProducts(urlFilters);
+    } else {
+      setProducts([]);
+    }
+  }, [urlFilters, location.pathname, debouncedFetchProducts, updateSelectedItems, filters]);
 
-    return () => clearTimeout(timeoutId);
-  }, [filters]);
+  // Cleanup timeout
+  useEffect(() => {
+    return () => {
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Filter management
+  const updateFilters = useCallback((newFilters, shouldFetch = true) => {
+    const updatedFilters = { ...filters, ...newFilters, page: 1 };
+    setFilters(updatedFilters);
+    updateSelectedItems(updatedFilters);
+    updateUrl(updatedFilters);
+    
+    if (shouldFetch) {
+      debouncedFetchProducts(updatedFilters);
+    }
+  }, [filters, updateSelectedItems, updateUrl, debouncedFetchProducts]);
 
   const setPriceRangeFilter = useCallback((price) => {
-    const newFilters = { ...filters, price, page: 1 };
-    setFilters(newFilters);
-    updateUrlWithFilters(newFilters);
-  }, [filters, updateUrlWithFilters]);
+    updateFilters({ price });
+  }, [updateFilters]);
 
   const setPageFilter = useCallback((page) => {
     const newFilters = { ...filters, page };
     setFilters(newFilters);
-    updateUrlWithFilters(newFilters);
-  }, [filters, updateUrlWithFilters]);
+    updateUrl(newFilters);
+    debouncedFetchProducts(newFilters);
+  }, [filters, updateUrl, debouncedFetchProducts]);
+
+  const setFilter = useCallback((e) => {
+    const { name, value } = e.target;
+    
+    if (SELECTABLE_FILTERS.includes(name) && isSelected.includes(value)) {
+      updateFilters({ [name]: '' });
+    } else {
+      updateFilters({ [name]: value });
+    }
+  }, [isSelected, updateFilters]);
+
+  const setMultipleFilters = useCallback((newFilterValues) => {
+    updateFilters(newFilterValues);
+  }, [updateFilters]);
+
+  const resetFilters = useCallback(() => {
+    setFilters(DEFAULT_FILTERS);
+    setIsSelected([]);
+    setSearchParams({}, { replace: true });
+    setProducts([]);
+    lastApiFiltersRef.current = null;
+  }, [setSearchParams]);
 
   // Home filter product
   const homeFilterProduct = useCallback(async (productType) => {
     try {
       const newFilters = {
-        title: '',
-        price: '',
+        ...DEFAULT_FILTERS,
         category: productType,
-        discount: null,
-        tags: '',
-        brands: '',
-        page: 1,
         limit: filters.limit,
       };
       
-      setFilters(newFilters);
-      updateUrlWithFilters(newFilters);
+      updateFilters(newFilters, false);
       return await fetchProducts(newFilters);
     } catch (error) {
       handleApiError(error, 'Error filtering products');
       return [];
     }
-  }, [filters.limit, updateUrlWithFilters, fetchProducts, handleApiError]);
+  }, [filters.limit, updateFilters, fetchProducts, handleApiError]);
 
-  // Set filter with toggle functionality
-  const setFilter = useCallback((e) => {
-    const { name, value } = e.target;
-    
-    let newFilters = { ...filters };
-    
-    // Toggle functionality for selected items
-    if (['category', 'tags', 'brands'].includes(name) && isSelected.includes(value)) {
-      setIsSelected(prev => prev.filter(item => item !== value));
-      newFilters[name] = '';
-    } else {
-      if (['category', 'tags', 'brands'].includes(name)) {
-        setIsSelected(prev => [...prev.filter(item => item !== filters[name]), value]);
-      }
-      newFilters[name] = value;
-    }
-    
-    // Reset page when filtering
-    newFilters.page = 1;
-    
-    setFilters(newFilters);
-    updateUrlWithFilters(newFilters);
-  }, [filters, isSelected, updateUrlWithFilters]);
+  // Navigation
+  const navigateToStore = useCallback((filterParams = {}) => {
+    const params = buildUrlParams(filterParams);
+    navigate(`/store?${params.toString()}`);
+  }, [navigate]);
 
-  // Set multiple filters at once
-  const setMultipleFilters = useCallback((newFilterValues) => {
-    const newFilters = { ...filters, ...newFilterValues, page: 1 };
-    setFilters(newFilters);
-    updateUrlWithFilters(newFilters);
-  }, [filters, updateUrlWithFilters]);
-
-  // Get home products by category
+  // Product operations
   const getHomeProducts = useCallback(async (category) => {
     try {
       setLoading(true);
@@ -232,7 +306,6 @@ const ProductProvider = ({ children }) => {
     }
   }, [handleApiError]);
 
-  // Get product by ID
   const getProductById = useCallback(async (id) => {
     if (!id) {
       showToast('Product ID is required', 'error');
@@ -253,18 +326,18 @@ const ProductProvider = ({ children }) => {
     }
   }, [handleApiError, showToast]);
 
-  // Get all admin products
+  // Admin operations
   const getAdminAllProducts = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
       const response = await apiClient.get('/api/product-service');
+      console.log("getAdminAllProducts", response.data);
       
       if (response.data) {
         setAdminProducts(response.data);
       }
-      
     } catch (err) {
       handleApiError(err, 'Error fetching admin products');
     } finally {
@@ -272,7 +345,6 @@ const ProductProvider = ({ children }) => {
     }
   }, [handleApiError]);
 
-  // Update admin product
   const adminProductUpdate = useCallback(async (id, data) => {
     if (!id || !data) {
       showToast('Product ID and data are required', 'error');
@@ -284,11 +356,11 @@ const ProductProvider = ({ children }) => {
       setError(null);
       
       const response = await apiClient.put(`/api/product-service/${id}`, data);
+      console.log("adminProductUpdate", response.data);
       
       if (response.data?.success) {
         showToast('Product updated successfully', 'success');
         
-        // Update local state
         setAdminProducts(prev => 
           prev.map(product => 
             product.id === id ? { ...product, ...response.data.data } : product
@@ -307,7 +379,6 @@ const ProductProvider = ({ children }) => {
     }
   }, [handleApiError, showToast]);
 
-  // Delete admin product
   const adminProductDelete = useCallback(async (id) => {
     if (!id) {
       showToast('Product ID is required', 'error');
@@ -319,13 +390,11 @@ const ProductProvider = ({ children }) => {
       setError(null);
       
       const response = await apiClient.delete(`/api/product-service/${id}`);
+      console.log("adminProductDelete", response.data);
       
       if (response.data?.success) {
         showToast('Product deleted successfully', 'success');
-        
-        // Update local state
         setAdminProducts(prev => prev.filter(product => product.id !== id));
-        
         return true;
       } else {
         throw new Error(response.data?.message || 'Failed to delete product');
@@ -338,7 +407,6 @@ const ProductProvider = ({ children }) => {
     }
   }, [handleApiError, showToast]);
 
-  // Create admin product
   const adminCreateProduct = useCallback(async (data) => {
     if (!data) {
       showToast('Product data is required', 'error');
@@ -350,11 +418,11 @@ const ProductProvider = ({ children }) => {
       setError(null);
       
       const response = await apiClient.post('/api/product-service', data);
+      console.log("adminCreateProduct", response.data);
       
       if (response.data?.success) {
         showToast('Product created successfully', 'success');
         
-        // Update local state
         if (response.data.data) {
           setAdminProducts(prev => [response.data.data, ...prev]);
         }
@@ -371,55 +439,26 @@ const ProductProvider = ({ children }) => {
     }
   }, [handleApiError, showToast]);
 
-  // Clear error
+  // Utility
   const clearError = useCallback(() => {
     setError(null);
   }, []);
 
-  // Reset filters
-  const resetFilters = useCallback(() => {
-    const defaultFilters = {
-      title: '',
-      price: '',
-      category: '',
-      discount: null,
-      tags: '',
-      brands: '',
-      page: 1,
-      limit: 12,
-    };
-    
-    setFilters(defaultFilters);
-    setIsSelected([]);
-    setSearchParams({}, { replace: true });
-  }, [setSearchParams]);
-
-  // Navigate to store with filters
-  const navigateToStore = useCallback((filterParams = {}) => {
-    const params = new URLSearchParams();
-    
-    Object.entries(filterParams).forEach(([key, value]) => {
-      if (value !== '' && value !== null && value !== undefined) {
-        params.set(key, String(value));
-      }
-    });
-
-    navigate(`/store?${params.toString()}`);
-  }, [navigate]);
-
-  const contextValue =  {
+  // Context value
+  const contextValue = {
     products,
     adminProducts,
     loading,
     error,
     filters,
     isSelected,
-    fetchProducts,
     setPriceRangeFilter,
     setPageFilter,
-    homeFilterProduct,
     setFilter,
     setMultipleFilters,
+    resetFilters,
+    fetchProducts,
+    homeFilterProduct,
     getHomeProducts,
     getProductById,
     getAdminAllProducts,
@@ -427,12 +466,9 @@ const ProductProvider = ({ children }) => {
     adminProductDelete,
     adminCreateProduct,
     clearError,
-    resetFilters,
     navigateToStore,
     setLoading,
-    updateUrlWithFilters,
-    parseUrlToFilters,
-  } ;
+  };
 
   return (
     <ProductContext.Provider value={contextValue}>

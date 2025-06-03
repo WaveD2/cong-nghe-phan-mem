@@ -27,6 +27,8 @@ import CreateProductForm from "./pages/admin/createProducts";
 import CustomerDashboard from "./pages/client/dashboard";
 import CustomerLayout from "./pages/client/customerLayout";
 import CustomerOrder from "./pages/client/customerOrder";
+import ForgotPassword from "./components/auth/forgotPassword";
+import UserDetail from "./components/user/userDetail";
 
 function App() {
   return (
@@ -36,11 +38,12 @@ function App() {
           <ProductProvider>
             <Routes>
               <Route path="/" element={<Layout />}>
-                <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/contact" element={<ContactForm />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
+                <Route path="/" element={<Home />} />
 
                 <Route path="/dashboard">
                   <Route
@@ -80,7 +83,7 @@ function App() {
                     path="customer"
                     element={
                       <ProtectedRoute
-                        allowedRoles={["customer"]}
+                        allowedRoles={["user", "admin"]}
                         redirectTo="/dashboard/customer"
                       />
                     }
@@ -99,11 +102,11 @@ function App() {
 
                 <Route
                   element={
-                    <ProtectedRoute allowedRoles={["admin", "customer"]} />
+                    <ProtectedRoute allowedRoles={["admin", "user"]} />
                   }
                 >
                   <Route path="/logout" element={<Logout />} />
-
+                  <Route path="/user/:id" element={<UserDetail />} />
                   <Route path="/cart" element={<CartPage />} />
                   <Route path="/checkout" element={<CheckoutPage />} />
                 </Route>

@@ -113,6 +113,11 @@ const Login = () => {
         <div className="mt-4 text-center text-sm text-gray-600">
           <span>Bạn chưa có tài khoản?</span>
           <Link to="/register" className="text-blue-500 hover:underline" > Tạo tài khoản</Link>
+          <p>
+            <Link to="/forgot-password" className="text-blue-500 hover:underline">
+              Quên mật khâu
+            </Link>
+          </p>
         </div>
       </div>
     </div>

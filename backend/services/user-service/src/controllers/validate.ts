@@ -17,6 +17,11 @@ export const userValidator = z.object({
     .enum(['user', 'admin'])
     .default('user'),
 
+  phone: z
+    .string({ required_error: 'Sđt là bắt buộc' })
+    .min(6, 'Số điện thoại chưa đúng định dạng sđt')
+    .max(13 , 'Số điện thoại chưa đúng định dạng sđt'),
+
   avatar: z
     .string()
     .url('Avatar phải là URL hợp lệ')

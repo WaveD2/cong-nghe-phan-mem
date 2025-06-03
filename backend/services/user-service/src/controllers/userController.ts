@@ -11,6 +11,10 @@ import { OAuth2Client } from "google-auth-library";
 import admin from "./firebase";
 import { userLoginValidator, userValidator } from "./validate";
 import { z } from "zod";
+import { cacheHelper } from "../redis";
+import bcrypt from 'bcrypt';
+import { helper } from "../utils/heper";
+import { sendMailForgotPassword } from "../utils/email";
 
 
 class UserController {
@@ -33,7 +37,7 @@ class UserController {
     try {
       const validated = userValidator.parse(req.body);
 
-      const exist = await this.UserModel.findOne({ email: validated.email });
+      const exist = await this.UserModel.findOne({ email: validated.email});
       
       if (exist) {
         return res.status(400).json({ success: false, message: "Người dùng đã tồn tại" });
@@ -84,7 +88,6 @@ class UserController {
     }
   }
   
-
   async login(req: Request, res: Response, next: NextFunction) : Promise<any> {
     try {
       const result = userLoginValidator.parse(req.body);
@@ -175,7 +178,7 @@ class UserController {
 
   async getAll(req: Request, res: Response, next: NextFunction): Promise<any> {
     try {
-      const { limit = 10, page = 1, name } = req.query;
+      const { limit = 10, page = 1, name, role } = req.query;
   
       const pageSize = Number(limit);
       const currentPage = Number(page);
@@ -299,6 +302,126 @@ class UserController {
       }
   
       return res.status(401).json({ success: false, message: "Refresh token không hợp lệ" });
+    }
+  }
+
+
+  async requestForgotPasswordOTP(req: Request, res: Response) : Promise<any>  {
+   try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Thiếu thông tin Email' });
+    }
+
+    const user = await this.UserModel.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Không tìm thấy nguời dừng' });
+    }
+
+    const cacheKey = `forgot-password:${email}`;
+    const { code, isSend, ttlPerSeconds } = await helper.requestOTP({
+      cacheKey,
+      ttlPerSeconds: 5 * 60,
+    });
+
+    console.log(`OTP for ${email}: ${code}`);
+    if(!isSend) await sendMailForgotPassword(user, String(code));
+
+    return res.status(200).json({
+      message: isSend ? `OTP đã được gửi. Vui lồng kiểm tra ${email}` : `OTP gửi thành công qua email ${email}`,
+      ttl: ttlPerSeconds,
+      success: true,
+    });
+   } catch (error) {
+    console.log("error requestForgotPasswordOTP", error);
+    
+    return res.status(401).json({ 
+      success: false,
+      message: 'Lỗi gửi OTP' });
+   }
+  }
+
+  // 2. Xác thực OTP
+  async confirmForgotPasswordOTP(req: Request, res: Response) : Promise<any>{
+    try {
+      const { email, otp } = req.body;
+
+      if (!email || !otp) {
+        return res.status(400).json({ 
+          success: false,
+          message: 'Thiếu thông tin email hoặc OTP' });
+      }
+  
+      const cacheKey = `forgot-password:${email}`;
+      const cachedOTP = await cacheHelper.getKey<string>(cacheKey);
+  
+      if (!cachedOTP) {
+        return res.status(400).json({
+          success: false,
+          message: 'OTP đã hết hạn' });
+      }
+  
+      if (cachedOTP !== otp) {
+        return res.status(400).json({ 
+          success: false,
+          message: 'OTP không hợp lệ' });
+      }
+  
+      // Đánh dấu OTP đã xác thực
+      await cacheHelper.setKeyValueExpire(`forgot-password:verified:${email}`, true, 10 * 60); // 10 phút
+  
+      return res.status(200).json({ 
+        success: true,
+        message: 'Xác thức OTP thanh cong' });
+    } catch (error) {
+      console.log("error confirmForgotPasswordOTP", error);
+    
+    return res.status(401).json({ 
+      success: false,
+      message: 'Lỗi xác thức OTP ' });
+     }
+    }
+
+  // 3. Đổi mật khẩu
+  async forgotPassword(req: Request, res: Response) : Promise<any>{
+    try {
+      const { email, newPassword } = req.body;
+
+    if (!email || !newPassword) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Thiếu thông tin email hoặc mật khẩu'});
+    }
+
+    const isVerified = await cacheHelper.getKey(`forgot-password:verified:${email}`);
+    if (!isVerified) {
+      return res.status(403).json({ 
+        success: false,
+        message: 'OTP hết hiệu lực' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.UserModel.updateOne({ email }, { password: hashedPassword });
+
+    await cacheHelper.delMultiKey([
+      `forgot-password:${email}`,
+      `forgot-password:verified:${email}`,
+    ]);
+
+    return res.status(201).json({
+      success: true,
+      message: 'Đổi mât khẩu thành công' });
+    } catch (error) {
+      console.log("error forgotPassword", error);
+      
+      return res.status(401).json({ 
+        success: false,
+        message: 'Lỗi đổi mật khâu' });
     }
   }
 }

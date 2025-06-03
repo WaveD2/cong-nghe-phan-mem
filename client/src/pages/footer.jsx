@@ -32,8 +32,7 @@ export default function Footer() {
         <div className="min-h-[500px]  relative lg:min-h-[400px] flex flex-col justify-between bg-slate-900 text-white p-8 md:p-12">
             <div className="space-y-8">
                 <div className="text-center space-y-4">
-                    <p className="text-gray-400">Get Latest Updates</p>
-                    <h2 className="text-3xl md:text-4xl font-serif">Subscribe For Newsletter</h2>
+                    <h2 className="text-3xl md:text-4xl font-serif">Đăng ký email để nhận thông báo</h2>
                 </div>
 
                 <div className="flex flex-col md:flex-row gap-4 max-w-xl mx-auto">
@@ -49,18 +48,18 @@ export default function Footer() {
                         onClick={handleSubscribe}
                         className="px-6 py-2 bg-white text-slate-900 rounded-md hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-slate-900"
                     >
-                        Subscribe Now
+                        Đăng ký
                     </button>
                 </div>
 
                 <div className="lg:hidden  flex flex-col md:flex-row justify-center items-center gap-8 mt-12">
                     <div className="flex items-center gap-2">
                         <Phone className="w-5 h-5" />
-                        <span>9803304345</span>
+                        <span>0988233528</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <Mail className="w-5 h-5" />
-                        <span>subeshgaming@gmail.com</span>
+                        <span>tungdev64@gmail.com</span>
                     </div>
                 </div>
             </div>
@@ -70,16 +69,14 @@ export default function Footer() {
                     <a href="#" className="p-3 rounded-full hover:bg-gray-800 transition-colors">
                         <Facebook className="w-5 h-5" />
                     </a>
-                    <a href="https://www.github.com/subeshyadav3/" className="p-3 rounded-full hover:bg-gray-800 transition-colors">
-                        <Github className="w-5 h-5" />
-                    </a>
-                    <a href="https://www.linkedin.com/in/subeshyadav3/" className="p-3 rounded-full hover:bg-gray-800 transition-colors">
+                   
+                    <a href="#" className="p-3 rounded-full hover:bg-gray-800 transition-colors">
                         <Linkedin className="w-5 h-5" />
                     </a>
                 </div>
 
                 <div className="text-center text-sm text-gray-400">
-                    <p>© 2025 Developed By Subesh Yadav</p>
+                    <p>© 2025 Developed By WaveD</p>
                 </div>
             </div>
             <div className="right-5 top-[80%] sm:top-1/2 sm:right-10 absolute">

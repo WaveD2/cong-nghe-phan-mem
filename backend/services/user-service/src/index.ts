@@ -5,6 +5,8 @@ import userRoute from "./routes/userRoute";
 import { errorHandler } from "./middleware/errMiddlware";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import { connectRedis } from "./redis";
+import { setupMail } from "./utils/email";
 config();
 dbConnect();
 
@@ -16,7 +18,8 @@ app.use(cors({
   origin: 'http://localhost:5173', // chỉ định origin cụ thể
   credentials: true, 
 }));
-
+setupMail();;
+connectRedis();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

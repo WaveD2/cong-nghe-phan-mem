@@ -6,14 +6,20 @@ services:
     ports:
       - "2181:2181"
     environment:
-      ALLOW_ANONYMOUS_LOGIN: yes
+      - ALLOW_ANONYMOUS_LOGIN=yes
     networks:
       - ecommerce_network
+    healthcheck:
+      test: [ "CMD", "echo", "ruok", "|", "nc", "-z", "localhost", "2181" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   kafka:
     image: confluentinc/cp-kafka:latest
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     ports:
       - "9092:9092"
       - "29092:29092"
@@ -21,12 +27,19 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_HOST://kafka:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    volumes:
+      - kafka_data:/var/lib/kafka/data
     networks:
       - ecommerce_network
+    healthcheck:
+      test: [ "CMD", "kafka-topics", "--list", "--bootstrap-server", "localhost:9092" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   user-mongodb:
     image: mongo:7.0.4
@@ -38,7 +51,12 @@ services:
     networks:
       - ecommerce_network
     environment:
-      MONGO_INITDB_DATABASE: user_db
+      - MONGO_INITDB_DATABASE=user_db
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   cart-mongodb:
     image: mongo:7.0.4
@@ -50,7 +68,12 @@ services:
     networks:
       - ecommerce_network
     environment:
-      MONGO_INITDB_DATABASE: cart_db
+      - MONGO_INITDB_DATABASE=cart_db
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   product-mongodb:
     image: mongo:7.0.4
@@ -62,7 +85,12 @@ services:
     networks:
       - ecommerce_network
     environment:
-      MONGO_INITDB_DATABASE: product_db
+      - MONGO_INITDB_DATABASE=product_db
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   order-mongodb:
     image: mongo:7.0.4
@@ -74,7 +102,28 @@ services:
     networks:
       - ecommerce_network
     environment:
-      MONGO_INITDB_DATABASE: order_db
+      - MONGO_INITDB_DATABASE=order_db
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis_cnpm
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - ecommerce_network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   user-service:
     build:
@@ -83,13 +132,19 @@ services:
     ports:
       - "7001:7001"
     depends_on:
-      - kafka
-      - user-mongodb
+      kafka:
+        condition: service_healthy
+      user-mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - ecommerce_network
     environment:
-      KAFKA_BROKERS: kafka:29092
-      MONGODB_URI: mongodb://user-mongodb:27017/user_db
+      - KAFKA_BROKERS=kafka:9092
+      - MONGODB_URI=mongodb://user-mongodb:27017/user_db
+      - REDIS_HOST=redis_cnpm
+      - REDIS_PORT=6379
 
   cart-service:
     build:
@@ -98,13 +153,19 @@ services:
     ports:
       - "7003:7003"
     depends_on:
-      - kafka
-      - cart-mongodb
+      kafka:
+        condition: service_healthy
+      cart-mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - ecommerce_network
     environment:
-      KAFKA_BROKERS: kafka:29092
-      MONGODB_URI: mongodb://cart-mongodb:27017/cart_db
+      - KAFKA_BROKERS=kafka:9092
+      - MONGODB_URI=mongodb://cart-mongodb:27017/cart_db
+      - REDIS_HOST=redis_cnpm
+      - REDIS_PORT=6379
 
   product-service:
     build:
@@ -113,13 +174,19 @@ services:
     ports:
       - "7002:7002"
     depends_on:
-      - kafka
-      - product-mongodb
+      kafka:
+        condition: service_healthy
+      product-mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - ecommerce_network
     environment:
-      KAFKA_BROKERS: kafka:29092
-      MONGODB_URI: mongodb://product-mongodb:27017/product_db
+      - KAFKA_BROKERS=kafka:9092
+      - MONGODB_URI=mongodb://product-mongodb:27017/product_db
+      - REDIS_HOST=redis_cnpm
+      - REDIS_PORT=6379
 
   order-service:
     build:
@@ -128,13 +195,19 @@ services:
     ports:
       - "7004:7004"
     depends_on:
-      - kafka
-      - order-mongodb
+      kafka:
+        condition: service_healthy
+      order-mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - ecommerce_network
     environment:
-      KAFKA_BROKERS: kafka:29092
-      MONGODB_URI: mongodb://order-mongodb:27017/order_db
+      - KAFKA_BROKERS=kafka:9092
+      - MONGODB_URI=mongodb://order-mongodb:27017/order_db
+      - REDIS_HOST=redis_cnpm
+      - REDIS_PORT=6379
 
   nginx:
     container_name: nginx-gateway
@@ -159,3 +232,5 @@ volumes:
   cart-mongodb-data:
   product-mongodb-data:
   order-mongodb-data:
+  redis_data:
+  kafka_data:

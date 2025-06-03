@@ -5,5 +5,6 @@ export default interface UserType extends Document {
   email: string;
   password: string;
   role: 'admin' | 'user'; 
-  avatar: string
+  avatar: string;
+  phone: string;
 }

@@ -1,68 +1,71 @@
 import { useNavigate } from "react-router-dom";
-import AddToCartButton from "./productDetailsIndividual/AddToCartButton";
 import { formatCurrencyVND } from "../../hepler";
+import AddToCartButton from "./productDetailsIndividual/AddToCartButton";
+import { Heart } from "lucide-react";
 
 const ProductCard = ({ product }) => {
-  console.log("ProductCard product:", product);
-  
-  const truncateDescription = (description, wordLimit = 15) => {
-    if(description){
-      const words = description.split(" ");
-      if (words.length > wordLimit) {
-        return words.slice(0, wordLimit).join(" ") + "...";
-      }
-      return description;
-    }
-  };
   const navigate = useNavigate();
 
   const handleProductClick = () => {
-    // getProductById(product?._id);
-    // console.log(e.target.key)
     navigate(`/store/${product?._id}`);
   };
+
+  const truncateDescription = (description, wordLimit = 15) => {
+    if (description) {
+      const words = description.split(" ");
+      return words.length > wordLimit
+        ? words.slice(0, wordLimit).join(" ") + "..."
+        : description;
+    }
+    return "";
+  };
+
   return (
     <div
-      key={product?._id}
       onClick={handleProductClick}
-      className="bg-white shadow-lg w-[350px] md:w-full mr-5 mb-5 rounded-xl transform transition-transform duration-300 hover:scale-105 overflow-hidden relative"
+      className="group relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer w-full max-w-sm"
     >
       {/* Badge giảm giá */}
       {product?.discount > 0 && (
-        <span className="absolute top-3 right-3 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded">
-          -{product?.discount}%
-        </span>
+        <div className="absolute top-3 left-3 z-10 bg-red-500 text-white text-xs px-2 py-1 rounded shadow">
+          -{product.discount}%
+        </div>
       )}
 
-      {/* Thumbnail */}
+      {/* Icon yêu thích (demo UI) */}
+      <div className="absolute top-3 right-3 z-10 text-gray-500 hover:text-red-500 transition">
+        <Heart size={18} />
+      </div>
+
+      {/* Ảnh sản phẩm */}
       <img
         src={product?.thumbnail}
         alt={product?.title}
-        className="w-full h-56 object-cover hover:opacity-90 transition-opacity duration-300 cursor-pointer" 
+        className="h-56 w-full object-cover group-hover:scale-105 transition-transform duration-300"
       />
 
-      <div className="p-4 flex flex-col justify-between h-[260px]">
-        <h2 className="text-xl font-bold text-gray-800 mb-2 line-clamp-2 ">
+      {/* Nội dung */}
+      <div className="p-4 flex flex-col justify-between h-[220px]">
+        <h3 className="text-lg font-semibold text-gray-800 line-clamp-2">
           {product?.title}
-        </h2>
+        </h3>
 
-        {/* Mô tả */}
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+        <p className="text-sm text-gray-500 mt-2 line-clamp-2">
           {truncateDescription(product?.description)}
         </p>
 
         {/* Giá */}
-        <div className="flex justify-between items-center mb-4">
-          <p className="text-gray-400 line-through text-sm">
+        <div className="flex items-center justify-between mt-4">
+          <span className="text-sm text-gray-400 line-through">
             {formatCurrencyVND(product?.price)}
-          </p>
-          <p className="text-lg font-bold text-green-600">
+          </span>
+          <span className="text-lg font-bold text-green-600">
             {formatCurrencyVND(product?.discountedPrice)}
-          </p>
+          </span>
         </div>
 
-        {/* Button thêm giỏ hàng */}
-        <div onClick={(e) => e.stopPropagation()}>
+        {/* Nút thêm giỏ hàng */}
+        <div onClick={(e) => e.stopPropagation()} className="mt-4">
           <AddToCartButton productId={product?._id} />
         </div>
       </div>

@@ -15,6 +15,11 @@ userRoute.post("/refreshToken", userController.refreshToken.bind(userController)
 userRoute.post("/login-email", userController.loginWithGoogle.bind(userController)); 
 userRoute.post("/logout", userController.logout.bind(userController)); 
 userRoute.post("/verifyme", authMid, (req : any,res)=>{res.status(200).json({ success: true, user: req.user});})
+userRoute.post("/otp", userController.logout.bind(userController));
+userRoute.post("/forgot-password/request", userController.requestForgotPasswordOTP.bind(userController)); 
+userRoute.post("/forgot-password/confirm", userController.confirmForgotPasswordOTP.bind(userController));
+userRoute.post("/forgot-password", userController.forgotPassword.bind(userController));
+
 
 userRoute.get("/", authMid, autAdminMid, userController.getAll.bind(userController))
 

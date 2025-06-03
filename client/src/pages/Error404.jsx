@@ -25,16 +25,11 @@ const Error404 = () => {
             404 - Page Not Found
           </h1>
   
-          <p className="text-lg text-gray-600 mb-8">
-            Oops! The page you're looking for doesn't exist or has been moved.
-          </p>
-  
-
           <a
             href="/"
             className="inline-block bg-blue-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-300"
           >
-            Go Back Home
+            Quay lại trang chính
           </a>
         </div>
       </div>

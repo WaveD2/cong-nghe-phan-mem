@@ -11,21 +11,17 @@ const ProductDetails = () => {
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const { id } = useParams();
-  const { getProductById, getHomeProducts, loading } = useProducts();
+  const { getProductById, loading , products} = useProducts();
 
   useEffect(() => {
     const fetchData = async () => {
       // Fetch product details
       const foundProduct = await getProductById(id);
       setProduct(foundProduct.data);
-
-      // Fetch related products (assuming same category or similar logic)
-      const products = await getHomeProducts();
-      console.log("Fetched products:", products.data);
       
       const related = products.data
         .filter((p) => p._id !== id && p.category === foundProduct.data.category)
-        .slice(0, 4); // Limit to 4 related products
+        .slice(0, 4) 
       setRelatedProducts(related);
     };
 

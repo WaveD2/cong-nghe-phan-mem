@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useState, useContext, useEffect } from 'react';
 import apiClient from '../components/helper/axios';
 const AuthContext = createContext();
 
@@ -25,7 +25,7 @@ export const AuthProvider = ({ children }) => {
             setUser(res.data.user);
             setIsAuthenticated(true);
           }
-      } catch (error) {
+      } catch (error ) {
           setIsAuthenticated(false);
           setUser(null);
       }
@@ -42,9 +42,11 @@ useEffect(() => {
 }, [user]);
 
 
-  const register= async (name,email,password)=>{
+  const register= async (name,email,password, contact)=>{
     try{
-      const res=await apiClient.post('/api/user-service/register',{name,email,password});
+      const res=await apiClient.post('/api/user-service/register',{name,email,password, phone: contact}, {
+        withCredentials: true
+      } );
       console.log("register::::", res.data);  
       if(res.data.success){
           console.log("Register", res)
@@ -58,20 +60,36 @@ useEffect(() => {
       throw err;
   }};
 
-  const getOtp= async (email)=>{
+  const requestForgotPassword= async (email)=>{
     try{
-      const res=await apiClient.post('/api/user-service/otp',{email});
-      console.log("Verify Otp", res)
+      const res=await apiClient.post('/api/user-service/forgot-password/request',{email}, {
+        withCredentials: true
+      });
+      console.log("Verify forgot-password", res)
       return res
     }catch(err){
       console.error('OTP error:', err);
       throw err;
   }};
 
-  const otpVerify= async (email,otp)=>{
+  const confirmForgotPassword= async (email,otp)=>{
     try{
-      const res=await apiClient.post('/api/user-service/verifyotp',{email,otp});
-      console.log("Verify Otp", res)
+      const res=await apiClient.post('/api/user-service/forgot-password/confirm',{email, otp}, {
+        withCredentials: true
+      });
+      console.log("Verify confirmForgotPassword", res)
+      return res.data
+    }catch(err){
+      console.error('OTP error:', err);
+      throw err;
+  }};
+
+  const forgotPassword= async (email,password)=>{
+    try{
+      const res=await apiClient.post('/api/user-service/forgot-password',{email, newPassword: password }, {
+        withCredentials: true
+      });
+      console.log("Verify confirmForgotPassword", res)
       return res.data
     }catch(err){
       console.error('OTP error:', err);
@@ -111,9 +129,9 @@ useEffect(() => {
 
   const getAdminAllUsers = async () => {
     try {
-      const res = await apiClient.get('/admin/users');
+      const res = await apiClient.get('/api/user-service');
       // console.log("Get all users", res.data.users)
-      return res.data.users;
+      return res.data;
     } catch (err) {
       console.error('Get all users error:', err);
       throw err;
@@ -145,7 +163,9 @@ useEffect(() => {
 
   
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated,getAdminAllUsers,adminUserUpdate, getAdminUsersById,isLoading, login,register, logout,getOtp,otpVerify }}>
+    <AuthContext.Provider value={{ user,
+     isAuthenticated,getAdminAllUsers,adminUserUpdate, getAdminUsersById,isLoading,
+      login,register, logout,requestForgotPassword,confirmForgotPassword,forgotPassword }}>
       {children}
     </AuthContext.Provider>
   );
