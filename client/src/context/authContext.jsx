@@ -28,12 +28,14 @@ export const AuthProvider = ({ children }) => {
       } catch (error ) {
           setIsAuthenticated(false);
           setUser(null);
+          console.log("Verify me error", error);
+          
       }
       setIsLoading(false);
   };
 
   checkAuth();
-}, [isAuthenticated]);
+}, []);
 
 
 useEffect(() => {

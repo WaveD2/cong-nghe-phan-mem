@@ -32,8 +32,8 @@ const AddToCartButton = ({ productId, onAddToCart }) => {
   }
 
   return (
-    <div className="flex items-center space-x-2">
-      <div className="flex items-center border border-gray-300 rounded-l-full overflow-hidden">
+    <div className="flex items-center w-full justify-between space-x-2">
+      <div className="flex w-1/3 items-center border border-gray-300 rounded-l-full overflow-hidden">
         <button
           className="p-2 hover:bg-gray-100 transition-colors disabled:opacity-50"
           onClick={decrementQuantity}
@@ -53,7 +53,7 @@ const AddToCartButton = ({ productId, onAddToCart }) => {
         </button>
       </div>
       <button
-        className="flex items-center gap-2 md:text-sm text-base  rounded-r-full px-2 h-10 bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50"
+        className="flex flex-1 items-center gap-2 md:text-sm text-base  rounded-r-full px-2 py-[6px] bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50"
         onClick={handleAddToCart}
         disabled={isAdding}
       >

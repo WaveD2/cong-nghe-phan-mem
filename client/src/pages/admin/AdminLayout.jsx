@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import  { useState, useEffect } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { MdAdminPanelSettings } from "react-icons/md";
 import { FaUsersCog } from "react-icons/fa";
@@ -36,7 +36,7 @@ function AdminLayout() {
   }, []);
 
   return (
-    <div className="grid grid-cols-[auto,1fr] min-h-screen">
+    <div className="grid min-h-screen">
      
       <div
         className={`text-black p-5 border-r-2 transition-all duration-300 ${
@@ -81,7 +81,6 @@ function AdminLayout() {
               className={({ isActive }) => (isActive ? "text-blue-500" : "text-black")}
             >
               {!isSidebarOpen ? (
-                // <img src="/public/admin/product.png" className="w-5 h-5" />
                 <MdOutlineProductionQuantityLimits />
               ) : (
                 "Quản lý sản phẩm"
@@ -106,9 +105,7 @@ function AdminLayout() {
               className={({ isActive }) => (isActive ? "text-blue-500" : "text-black")}
             >
               {!isSidebarOpen ? (
-                // <img src="/public/admin/order.png" className="w-5 h-5" />
                 <MdManageHistory />
-                
               ) : (
                 "Quản lý đặt hàng"
               )}

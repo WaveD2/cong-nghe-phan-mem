@@ -1,23 +1,7 @@
 import { useState, useEffect } from "react";
+import { CATEGORIES , BRANDS} from "../../constant.js";
 
-const categories = [
-  { label: "Laptops", value: "laptops" },
-  { label: "Watches", value: "mens-watches" },
-  { label: "Smartphones", value: "smartphones" },
-  { label: "Tablets", value: "tablets" },
-];
-
-const brands = [
-  "Asus",
-  "Apple",
-  "Huawei",
-  "Lenovo",
-  "Dell",
-  "Rolex",
-  "Samsung",
-  "Vivo",
-];
-
+ 
 export default function SidebarComponent({
   setFilter,
   handlePriceRangeChange,
@@ -66,7 +50,7 @@ export default function SidebarComponent({
         <div>
           <h2 className="text-lg font-semibold text-gray-800 mb-4">Category</h2>
           <div className="flex flex-wrap gap-2">
-            {categories.map((cat) => {
+            {CATEGORIES.map((cat) => {
               const isActive = selectedCategory === cat.value;
               return (
                 <button
@@ -90,7 +74,7 @@ export default function SidebarComponent({
         <div>
           <h2 className="text-lg font-semibold text-gray-800 mb-4">Brands</h2>
           <div className="flex flex-wrap gap-2">
-            {brands.map((brand) => {
+            {BRANDS.map((brand) => {
               const isActive = selectedBrand === brand;
               return (
                 <button

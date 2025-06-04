@@ -33,7 +33,7 @@ const ProductCard = ({ product }) => {
       )}
 
       {/* Icon yêu thích (demo UI) */}
-      <div className="absolute top-3 right-3 z-10 text-gray-500 hover:text-red-500 transition">
+      <div className="absolute top-3 right-3 z-1 text-gray-500 hover:text-red-500 transition">
         <Heart size={18} />
       </div>
 

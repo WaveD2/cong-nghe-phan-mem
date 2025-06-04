@@ -89,19 +89,15 @@ const ProductProvider = ({ children }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { showToast } = useToast();
   
-  // State
   const [products, setProducts] = useState([]);
-  const [adminProducts, setAdminProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [isSelected, setIsSelected] = useState([]);
   
-  // Refs
   const lastApiFiltersRef = useRef(null);
   const fetchTimeoutRef = useRef(null);
 
-  // Error handling
   const handleApiError = useCallback((error, defaultMessage) => {
     console.error(defaultMessage, error);
     
@@ -123,7 +119,6 @@ const ProductProvider = ({ children }) => {
     return errorMessage;
   }, [showToast]);
 
-  // Update URL
   const updateUrl = useCallback((newFilters) => {
     const params = buildUrlParams(newFilters);
     const newSearch = params.toString();
@@ -134,7 +129,6 @@ const ProductProvider = ({ children }) => {
     }
   }, [searchParams, setSearchParams]);
 
-  // Update selected items
   const updateSelectedItems = useCallback((currentFilters) => {
     const selectedItems = [];
     SELECTABLE_FILTERS.forEach(key => {
@@ -145,7 +139,6 @@ const ProductProvider = ({ children }) => {
     setIsSelected(selectedItems);
   }, []);
 
-  // Fetch products
   const fetchProducts = useCallback(async (customFilters = null) => {
     const filterParams = customFilters || filters;
     const cleanFilters = cleanFiltersForApi(filterParams);
@@ -165,7 +158,7 @@ const ProductProvider = ({ children }) => {
       lastApiFiltersRef.current = cleanFilters;
       
       const response = await apiClient.get('/api/product-service', { 
-        params: cleanFilters 
+        params: cleanFilters
       });
       
       if (response.data) {
@@ -183,7 +176,6 @@ const ProductProvider = ({ children }) => {
     }
   }, [filters, products, handleApiError]);
 
-  // Debounced fetch
   const debouncedFetchProducts = useCallback((customFilters = null) => {
     if (fetchTimeoutRef.current) {
       clearTimeout(fetchTimeoutRef.current);
@@ -194,8 +186,7 @@ const ProductProvider = ({ children }) => {
     }, 300);
   }, [fetchProducts]);
 
-  // Initialize filters from URL
-  const urlFilters = useMemo(() => parseUrlFilters(searchParams), [searchParams]);
+   const urlFilters = useMemo(() => parseUrlFilters(searchParams), [searchParams]);
 
   useEffect(() => {
     if (!filtersEqual(urlFilters, filters)) {
@@ -210,8 +201,7 @@ const ProductProvider = ({ children }) => {
     }
   }, [urlFilters, location.pathname, debouncedFetchProducts, updateSelectedItems, filters]);
 
-  // Cleanup timeout
-  useEffect(() => {
+   useEffect(() => {
     return () => {
       if (fetchTimeoutRef.current) {
         clearTimeout(fetchTimeoutRef.current);
@@ -219,8 +209,7 @@ const ProductProvider = ({ children }) => {
     };
   }, []);
 
-  // Filter management
-  const updateFilters = useCallback((newFilters, shouldFetch = true) => {
+   const updateFilters = useCallback((newFilters, shouldFetch = true) => {
     const updatedFilters = { ...filters, ...newFilters, page: 1 };
     setFilters(updatedFilters);
     updateSelectedItems(updatedFilters);
@@ -264,7 +253,6 @@ const ProductProvider = ({ children }) => {
     lastApiFiltersRef.current = null;
   }, [setSearchParams]);
 
-  // Home filter product
   const homeFilterProduct = useCallback(async (productType) => {
     try {
       const newFilters = {
@@ -281,17 +269,16 @@ const ProductProvider = ({ children }) => {
     }
   }, [filters.limit, updateFilters, fetchProducts, handleApiError]);
 
-  // Navigation
   const navigateToStore = useCallback((filterParams = {}) => {
     const params = buildUrlParams(filterParams);
     navigate(`/store?${params.toString()}`);
   }, [navigate]);
 
-  // Product operations
   const getHomeProducts = useCallback(async (category) => {
     try {
       setLoading(true);
       setError(null);
+      console.log("category::::", category);
       
       const response = await apiClient.get('/api/product-service', { 
         params: { category } 
@@ -326,25 +313,6 @@ const ProductProvider = ({ children }) => {
     }
   }, [handleApiError, showToast]);
 
-  // Admin operations
-  const getAdminAllProducts = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const response = await apiClient.get('/api/product-service');
-      console.log("getAdminAllProducts", response.data);
-      
-      if (response.data) {
-        setAdminProducts(response.data);
-      }
-    } catch (err) {
-      handleApiError(err, 'Error fetching admin products');
-    } finally {
-      setLoading(false);
-    }
-  }, [handleApiError]);
-
   const adminProductUpdate = useCallback(async (id, data) => {
     if (!id || !data) {
       showToast('Product ID and data are required', 'error');
@@ -358,15 +326,9 @@ const ProductProvider = ({ children }) => {
       const response = await apiClient.put(`/api/product-service/${id}`, data);
       console.log("adminProductUpdate", response.data);
       
-      if (response.data?.success) {
-        showToast('Product updated successfully', 'success');
-        
-        setAdminProducts(prev => 
-          prev.map(product => 
-            product.id === id ? { ...product, ...response.data.data } : product
-          )
-        );
-        
+      if (response.data.success) {
+        showToast(response.data.message);
+        await fetchProducts({ page: 1, limit: 10 });
         return response.data;
       } else {
         throw new Error(response.data?.message || 'Failed to update product');
@@ -377,7 +339,7 @@ const ProductProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [handleApiError, showToast]);
+  }, [handleApiError]);
 
   const adminProductDelete = useCallback(async (id) => {
     if (!id) {
@@ -390,11 +352,9 @@ const ProductProvider = ({ children }) => {
       setError(null);
       
       const response = await apiClient.delete(`/api/product-service/${id}`);
-      console.log("adminProductDelete", response.data);
-      
       if (response.data?.success) {
-        showToast('Product deleted successfully', 'success');
-        setAdminProducts(prev => prev.filter(product => product.id !== id));
+        showToast(response.data.message);
+        await fetchProducts({ page: 1, limit: 10 });
         return true;
       } else {
         throw new Error(response.data?.message || 'Failed to delete product');
@@ -405,11 +365,11 @@ const ProductProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [handleApiError, showToast]);
+  }, [handleApiError]);
 
   const adminCreateProduct = useCallback(async (data) => {
     if (!data) {
-      showToast('Product data is required', 'error');
+      showToast('Thiếu dữ liệu');
       return null;
     }
 
@@ -418,15 +378,10 @@ const ProductProvider = ({ children }) => {
       setError(null);
       
       const response = await apiClient.post('/api/product-service', data);
-      console.log("adminCreateProduct", response.data);
-      
-      if (response.data?.success) {
-        showToast('Product created successfully', 'success');
-        
-        if (response.data.data) {
-          setAdminProducts(prev => [response.data.data, ...prev]);
-        }
-        
+ 
+      if (response.data.success) {
+        await fetchProducts({ page: 1, limit: 10 });
+        showToast(response.data.message);
         return response.data;
       } else {
         throw new Error(response.data?.message || 'Failed to create product');
@@ -437,7 +392,7 @@ const ProductProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [handleApiError, showToast]);
+  }, [handleApiError]);
 
   // Utility
   const clearError = useCallback(() => {
@@ -447,7 +402,6 @@ const ProductProvider = ({ children }) => {
   // Context value
   const contextValue = {
     products,
-    adminProducts,
     loading,
     error,
     filters,
@@ -461,7 +415,6 @@ const ProductProvider = ({ children }) => {
     homeFilterProduct,
     getHomeProducts,
     getProductById,
-    getAdminAllProducts,
     adminProductUpdate,
     adminProductDelete,
     adminCreateProduct,

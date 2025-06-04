@@ -8,12 +8,8 @@ import { useProducts } from '../context/productContext';
 import ProductCard from '../components/products/productCard';
 import ProductSkeleton from '../components/skeleton/product-skeleton';
 
-const categories = [
-  { name: 'Điện thoại', value: 'smartphones' },
-  { name: 'Laptop', value: 'laptops' },
-  { name: 'Đồng hồ', value: 'mens-watches' },
-  { name: 'Máy tính bảng', value: 'tablets' },
-];
+import { CATEGORIES  } from '../constant';
+
 const Home = () => {
   const { getHomeProducts, loading, setLoading, error } = useProducts();
   const [allCategories, setAllCategories] = useState({
@@ -28,7 +24,7 @@ const Home = () => {
       try {
         setLoading(true);
         const updatedCategories = {};
-        for (let { value } of categories) {
+        for (let { value } of CATEGORIES) {
           const response = await getHomeProducts(value);
           if (response?.success && response?.data?.length > 0) {
             updatedCategories[value] = response.data;
@@ -113,7 +109,7 @@ const Home = () => {
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-8">Danh mục sản phẩm</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {categories.map(({ name, value }) => (
+            {CATEGORIES.map(({ name, value }) => (
               <Link to={`/store?category=${value}`} key={value}>
                 <motion.div
                   whileHover={{ scale: 1.05 }}
@@ -140,7 +136,7 @@ const Home = () => {
           >
             <div className="container mx-auto px-4">
               <h2 className="text-3xl font-bold text-center mb-8">
-                {categories.find((c) => c.value === category)?.name}
+                {CATEGORIES.find((c) => c.value === category)?.name}
               </h2>
               <div
                 className={

@@ -38,7 +38,7 @@ class ProductController {
 
   private validateProductId(id: string | undefined, res: Response): boolean {
     if (!id) {
-      res.status(400).json({ message: ERROR_MESSAGES.MISSING_ID });
+      res.status(400).json({ success: false, message: ERROR_MESSAGES.MISSING_ID });
       return false;
     }
     return true;
@@ -50,7 +50,7 @@ class ProductController {
 
       const existingProduct = await this.ProductModel.findOne({ title : validated.title , sku : validated.sku   });
       if (existingProduct) {
-        res.status(409).json({ message: ERROR_MESSAGES.PRODUCT_EXISTS });
+        res.status(409).json({ success: false, message: ERROR_MESSAGES.PRODUCT_EXISTS });
         return;
       }
 
@@ -59,10 +59,10 @@ class ProductController {
 
       await this.publishToKafka(record, ProductEvent.CREATE);
 
-      res.status(201).json({ message: "Thêm sản phẩm thành công", data: record });
+      res.status(201).json({success: true, message: "Thêm sản phẩm thành công", data: record });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: error.errors });
+        return res.status(400).json({ success: false,error: error.errors });
       }
       next(error);
     }
@@ -75,7 +75,7 @@ class ProductController {
 
       const product = await this.ProductModel.findById(id);
       if (!product) {
-        res.status(404).json({ message: ERROR_MESSAGES.PRODUCT_NOT_FOUND });
+        res.status(404).json({ success: false, message: ERROR_MESSAGES.PRODUCT_NOT_FOUND });
         return;
       }
       const validated = productValidator.parse(req.body);
@@ -88,7 +88,7 @@ class ProductController {
 
       await this.publishToKafka(updatedProduct!, ProductEvent.UPDATE);
 
-      res.status(200).json({ message: "Cập nhật thành công", data: updatedProduct });
+      res.status(200).json({ success: true, message: "Cập nhật thành công", data: updatedProduct });
     } catch (error) {
       next(error);
     }
@@ -101,13 +101,13 @@ class ProductController {
 
       const deletedProduct = await this.ProductModel.findByIdAndDelete(id);
       if (!deletedProduct) {
-        res.status(404).json({ message: ERROR_MESSAGES.PRODUCT_NOT_FOUND });
+        res.status(404).json({ success: false, message: ERROR_MESSAGES.PRODUCT_NOT_FOUND });
         return;
       }
 
       await this.publishToKafka(deletedProduct, ProductEvent.DELETE);
 
-      res.status(200).json({ message: "Xóa thành công", data: deletedProduct });
+      res.status(200).json({ success: true, message: "Xóa thành công", data: deletedProduct });
     } catch (error) {
       next(error);
     }
@@ -120,11 +120,11 @@ class ProductController {
 
       const product = await this.ProductModel.findById(id);
       if (!product) {
-        res.status(404).json({ message: ERROR_MESSAGES.PRODUCT_NOT_FOUND });
+        res.status(404).json({ success: false, message: ERROR_MESSAGES.PRODUCT_NOT_FOUND });
         return;
       }
 
-      res.status(200).json({ data: product });
+      res.status(200).json({success: true, data: product });
     } catch (error) {
       next(error);
     }
@@ -140,10 +140,12 @@ class ProductController {
         tags,
         brands,
         limit = 10,
-        page = 1
+        page = 1,
       }: any = req.query;
   
-      const filter: FilterQuery<IProduct> = {};
+      const filter: FilterQuery<IProduct> = {
+       
+      };
   
       if (title) {
         filter.title = { $regex: title, $options: 'i' };
@@ -183,6 +185,7 @@ class ProductController {
         .find(filter)
         .skip(skip)
         .limit(pageSize)
+        .sort({ createdAt: -1 })
         .exec();
   
       res.status(200).json({
