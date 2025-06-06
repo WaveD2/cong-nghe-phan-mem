@@ -193,7 +193,7 @@ const ManageOrderUpdate = () => {
           </button>
           <button
             type="button"
-            onClick={() => navigate("/dashboard/admin/orders")}
+            onClick={() => navigate("/dashboard/orders")}
             className="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 focus:outline-none"
           >
             Cancel

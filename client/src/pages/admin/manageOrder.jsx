@@ -37,7 +37,7 @@ const ManageOrder = () => {
 
   const handleProductEdit = async (orderId) => {
     if (orderId) {
-      navigate(`/dashboard/admin/orders/${orderId}`)
+      navigate(`/dashboard/orders/${orderId}`)
     }
   }
 

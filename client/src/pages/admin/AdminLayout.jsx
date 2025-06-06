@@ -64,7 +64,7 @@ function AdminLayout() {
           
           <li>
             <NavLink
-              to="/dashboard/admin"
+              to="/dashboard"
               end
               className={({ isActive }) => (isActive ? "text-blue-500" : "text-black")}
             >
@@ -77,7 +77,7 @@ function AdminLayout() {
           </li>
           <li>
             <NavLink
-              to="/dashboard/admin/products"
+              to="/dashboard/products"
               className={({ isActive }) => (isActive ? "text-blue-500" : "text-black")}
             >
               {!isSidebarOpen ? (
@@ -89,7 +89,7 @@ function AdminLayout() {
           </li>
           <li>
             <NavLink
-              to="/dashboard/admin/users"
+              to="/dashboard/users"
               className={({ isActive }) => (isActive ? "text-blue-500" : "text-black")}
             >
               {!isSidebarOpen ? (
@@ -101,7 +101,7 @@ function AdminLayout() {
           </li>
           <li>
             <NavLink
-              to="/dashboard/admin/orders"
+              to="/dashboard/orders"
               className={({ isActive }) => (isActive ? "text-blue-500" : "text-black")}
             >
               {!isSidebarOpen ? (

@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { debounce } from "../../hepler";
 import LoadingTable from "./loadingTable";
+import LoadingComponent from "./loadingComponent";
 
 export const CustomTable = ({ columns, data, pagination, onPageChange, onChangeLimit, onFilterChange, filterDebounce,
   loading, limit, filtersValueDefault
@@ -32,7 +33,7 @@ export const CustomTable = ({ columns, data, pagination, onPageChange, onChangeL
     }, [data, columns, localFilters]);
 
     return (
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto w-full">
         <table className="w-full border-collapse min-h-36">
           <thead>
             <tr className="bg-gray-100">
@@ -55,7 +56,7 @@ export const CustomTable = ({ columns, data, pagination, onPageChange, onChangeL
           </thead>
           <tbody>
             {loading ? (
-              <LoadingTable />
+              <LoadingComponent />
             ) :  (
               filteredData.map((row, index) => {
                 return (

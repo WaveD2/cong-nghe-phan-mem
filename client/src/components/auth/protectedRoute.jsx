@@ -3,7 +3,8 @@ import { Navigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/authContext';
 import LoadingComponent from '../helper/loadingComponent';
 
-const ProtectedRoute = ({ allowedRoles, redirectRoles }) => {
+const ProtectedRoute = ({ allowedRoles, redirectRoles = [] }) => {
+  
   const location = useLocation();
   const { isLoading, isAuthenticated, user } = useAuth();
   
@@ -20,7 +21,7 @@ const ProtectedRoute = ({ allowedRoles, redirectRoles }) => {
   }
 
   if (location.pathname === "/dashboard") {
-    const userRedirectPath = redirectRoles[user.role];
+    const userRedirectPath = redirectRoles.includes(user.role);
     if (userRedirectPath && userRedirectPath !== location.pathname) {
       return <Navigate to={userRedirectPath} replace />;
     }

@@ -278,8 +278,6 @@ const ProductProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-      console.log("category::::", category);
-      
       const response = await apiClient.get('/api/product-service', { 
         params: { category } 
       });

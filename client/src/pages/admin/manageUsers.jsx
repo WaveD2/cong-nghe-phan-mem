@@ -83,11 +83,11 @@ export default function ManageUsers() {
   }, [debouncedSearch, adminUsers]);
 
   const handleView = (id) => {
-    navigate(`/dashboard/admin/users/${id}`);
+    navigate(`/dashboard/users/${id}`);
   };
 
   const handleEdit = (id) => {
-    navigate(`/dashboard/admin/users/${id}/edit`);
+    navigate(`/dashboard/users/${id}/edit`);
   };
 
   const handleDelete = async (id) => {

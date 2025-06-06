@@ -109,13 +109,13 @@ const Home = () => {
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-8">Danh mục sản phẩm</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {CATEGORIES.map(({ name, value }) => (
+            {CATEGORIES.map(({ label, value }) => (
               <Link to={`/store?category=${value}`} key={value}>
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   className="bg-white rounded-lg shadow-md md:py-5 p-2 text-center hover:shadow-lg transition duration-300 cursor-pointer"
                 >
-                  <h3 className="font-semibold text-lg">{name}</h3>
+                  <h3 className="font-semibold text-lg">{label}</h3>
                 </motion.div>
               </Link>
             ))}
@@ -136,7 +136,7 @@ const Home = () => {
           >
             <div className="container mx-auto px-4">
               <h2 className="text-3xl font-bold text-center mb-8">
-                {CATEGORIES.find((c) => c.value === category)?.name}
+                {CATEGORIES.find((c) => c.value === category)?.label}
               </h2>
               <div
                 className={

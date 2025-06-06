@@ -1,6 +1,13 @@
+
 import { useState } from "react"
 import { useProducts } from "../../context/productContext"
 import LoadingComponent from "../../components/helper/loadingComponent"
+import { Save, UploadCloud } from "lucide-react";
+import Select from "react-select";
+import { motion } from "framer-motion";
+import { CATEGORIES } from "../../constant";
+import ImageUpload from "../../components/helper/image";
+
 
 function CreateProductForm() {
   const { adminCreateProduct, loading } = useProducts()
@@ -13,17 +20,15 @@ function CreateProductForm() {
     stock: "",
     discountPercentage: "",
     description: "",
-    thumbnail: "",
-    availabilityStatus: "in_stock",
-    warranty: "",
-    shippingInformation: "",
-    returnPolicy: "",
   })
+
+  const [thumbnailPreview, setThumbnailPreview] = useState([""]);
+  const [images, setImages] = useState([""]);
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setProduct((prev) => ({ ...prev, [name]: value }))
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }))
     }
@@ -31,22 +36,21 @@ function CreateProductForm() {
 
   const validateForm = () => {
     const newErrors = {}
-    if (!product.title.trim()) newErrors.title = "Title is required"
-    else if (product.title.length < 3) newErrors.title = "Title must be at least 3 characters"
-    
-    if (!product.brand.trim()) newErrors.brand = "Brand is required"
-    if (!product.category.trim()) newErrors.category = "Category is required"
-    
-    if (!product.description.trim()) newErrors.description = "Description is required"
-    else if (product.description.length < 20) newErrors.description = "Description must be at least 20 characters"
+    if (!product.title.trim()) newErrors.title = "Tên sản phẩm là bắt buộc"
+    else if (product.title.length < 3) newErrors.title = "Tên sản phẩm phải có ít nhất 3 ký tự"
 
-    // Numeric validation
-    if (product.price && isNaN(Number(product.price))) newErrors.price = "Price must be a number"
-    if (product.stock && isNaN(Number(product.stock))) newErrors.stock = "Stock must be a number"
-    if (product.discountPercentage && isNaN(Number(product.discountPercentage))) newErrors.discountPercentage = "Discount must be a number"
-    
-    // Thumbnail URL validation
-    if (product.thumbnail && !isValidUrl(product.thumbnail)) newErrors.thumbnail = "Please enter a valid URL"
+    if (!product.brand.trim()) newErrors.brand = "Thương hiệu là bắt buộc"
+    if (!product.category.trim()) newErrors.category = "Danh mục là bắt buộc"
+
+    if (!product.description.trim()) newErrors.description = "Mô tả là bắt buộc"
+    else if (product.description.length < 20) newErrors.description = "Mô tả phải ít nhất 20 ký tự"
+
+    if (product.price && isNaN(Number(product.price))) newErrors.price = "Giá phải là số"
+    if (product.stock && isNaN(Number(product.stock))) newErrors.stock = "Tồn kho phải là số"
+    if (product.discountPercentage && isNaN(Number(product.discountPercentage))) newErrors.discountPercentage = "Giảm giá phải là số"
+
+    if (product.thumbnail && !isValidUrl(product.thumbnail)) newErrors.thumbnail = "Đường dẫn hình ảnh không hợp lệ"
+
     return newErrors
   }
 
@@ -54,7 +58,7 @@ function CreateProductForm() {
     try {
       new URL(url)
       return true
-    } catch (e) {
+    } catch {
       return false
     }
   }
@@ -73,10 +77,10 @@ function CreateProductForm() {
       stock: Number(product.stock),
       discountPercentage: Number(product.discountPercentage),
     }
-    console.log(productData)
+
     try {
       await adminCreateProduct(productData)
-      alert("Product created successfully!")
+      alert("Tạo sản phẩm thành công!")
       setProduct({
         title: "",
         brand: "",
@@ -93,140 +97,160 @@ function CreateProductForm() {
       })
       setErrors({})
     } catch (error) {
-      alert("Failed to create product. Please try again.")
+      alert("Tạo sản phẩm thất bại. Vui lòng thử lại." ,error)
     }
   }
+ 
+
+  const handleCategoryChange = (selectedOption) => {
+    setProduct((prev) => ({ ...prev, category: selectedOption.value }));
+  };
 
   if (loading) return <LoadingComponent />
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-semibold mb-6">Create New Product</h1>
-      <form onSubmit={handleSubmit}>
-        {/* Basic Information */}
-        <div className="mb-6">
-          <h2 className="text-xl font-medium mb-4">Basic Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              { label: 'Title', name: 'title', type: 'text' },
-              { label: 'Brand', name: 'brand', type: 'text' },
-              { label: 'Category', name: 'category', type: 'text' },
-            ].map(({ label, name, type }) => (
-              <div key={name}>
-                <label htmlFor={name} className="block text-sm font-medium mb-1">
-                  {label} <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type={type}
-                  id={name}
-                  name={name}
-                  value={product[name]}
-                  onChange={handleInputChange}
-                  className={`w-full p-2 border rounded-md ${errors[name] ? "border-red-500" : "border-gray-300"}`}
-                />
-                {errors[name] && <p className="text-red-500 text-sm mt-1">{errors[name]}</p>}
-              </div>
-            ))}
-            
-            <div>
-              <label htmlFor="thumbnail" className="block text-sm font-medium mb-1">
-                Thumbnail URL
-              </label>
-              <input
-                type="text"
-                id="thumbnail"
-                name="thumbnail"
-                value={product.thumbnail}
-                onChange={handleInputChange}
-                className={`w-full p-2 border rounded-md ${errors.thumbnail ? "border-red-500" : "border-gray-300"}`}
-              />
-              {errors.thumbnail && <p className="text-red-500 text-sm mt-1">{errors.thumbnail}</p>}
-            </div>
-          </div>
-
-          <div className="mt-4">
-            <label htmlFor="description" className="block text-sm font-medium mb-1">
-              Description <span className="text-red-500">*</span>
+    <motion.div
+      className="container mx-auto p-6 bg-white shadow-lg rounded-lg"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      <h1 className="text-3xl font-bold mb-8 text-gray-800">Chỉnh sửa sản phẩm</h1>
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+              Tên sản phẩm
             </label>
-            <textarea
-              id="description"
-              name="description"
-              value={product.description}
+            <input
+              type="text"
+              id="title"
+              name="title"
+              value={product.title}
               onChange={handleInputChange}
-              rows="4"
-              className={`w-full p-2 border rounded-md ${errors.description ? "border-red-500" : "border-gray-300"}`}
+              className="w-full mt-2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Nhập tên sản phẩm"
             />
-            {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
+          </div>
+
+          <div>
+            <label htmlFor="brand" className="block text-sm font-medium text-gray-700">
+              Nhãn hàng
+            </label>
+            <input
+              type="text"
+              id="brand"
+              name="brand"
+              value={product.brand}
+              readOnly
+              className="w-full mt-2 p-3 bg-gray-100 border border-gray-300 rounded-md text-gray-600"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="category" className="block text-sm font-medium text-gray-700">
+              Danh mục
+            </label>
+            <Select
+              options={CATEGORIES}
+              defaultValue={CATEGORIES.find((opt) => opt.value === product.category)}
+              onChange={handleCategoryChange}
+              className="w-full mt-2 rounded-md"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+              Giá gốc (VNĐ)
+            </label>
+            <input
+              type="number"
+              id="price"
+              name="price"
+              value={product.price}
+              onChange={handleInputChange}
+              min="0"
+              className="w-full mt-2 p-3 border border-gray-300 rounded-md"
+              placeholder="VD: 1000000"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="stock" className="block text-sm font-medium text-gray-700">
+              Số lượng trong kho
+            </label>
+            <input
+              type="number"
+              id="stock"
+              name="stock"
+              value={product.stock}
+              onChange={handleInputChange}
+              min="0"
+              className="w-full mt-2 p-3 border border-gray-300 rounded-md"
+              placeholder="VD: 50"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="discountedPrice" className="block text-sm font-medium text-gray-700">
+              Giá bán sau giảm
+            </label>
+            <input
+              type="number"
+              id="discountedPrice"
+              name="discountedPrice"
+              value={product.discountedPrice}
+              onChange={handleInputChange}
+              min="0"
+              className="w-full mt-2 p-3 border border-gray-300 rounded-md"
+              placeholder="VD: 900000"
+            />
           </div>
         </div>
 
-        {/* Pricing and Inventory */}
-        <div className="mb-6">
-          <h2 className="text-xl font-medium mb-4">Pricing & Inventory</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              { label: 'Price', name: 'price', type: 'number', min: '0' },
-              { label: 'Stock', name: 'stock', type: 'number', min: '0' },
-              { label: 'Discount Percentage', name: 'discountPercentage', type: 'number', min: '0', max: '100' },
-            ].map(({ label, name, type, min, max }) => (
-              <div key={name}>
-                <label htmlFor={name} className="block text-sm font-medium mb-1">
-                  {label} <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type={type}
-                  id={name}
-                  name={name}
-                  value={product[name]}
-                  onChange={handleInputChange}
-                  min={min}
-                  max={max}
-                  className={`w-full p-2 border rounded-md ${errors[name] ? "border-red-500" : "border-gray-300"}`}
-                />
-                {errors[name] && <p className="text-red-500 text-sm mt-1">{errors[name]}</p>}
-              </div>
-            ))}
+        <div>
+          <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+            Mô tả sản phẩm
+          </label>
+          <textarea
+            id="description"
+            name="description"
+            value={product.description}
+            onChange={handleInputChange}
+            rows={5}
+            className="w-full mt-2 p-3 border border-gray-300 rounded-md resize-none"
+            placeholder="Mô tả chi tiết sản phẩm..."
+          ></textarea>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Ảnh sản phẩm</label>
+          <div className="flex items-center mt-2 gap-4">
+            <UploadCloud className="w-4 h-4" />
+              <ImageUpload images={product?.thumbnail || thumbnailPreview} maxImages={1} defaultValue={product.thumbnail || thumbnailPreview} setImages={setThumbnailPreview}/>
           </div>
         </div>
 
-        {/* Availability and Additional Info */}
-        <div className="mb-6">
-          <h2 className="text-xl font-medium mb-4">Additional Information</h2>
-          <div className="space-y-4">
-            {[
-              { label: 'Warranty Information', name: 'warranty' },
-              { label: 'Shipping Information', name: 'shippingInformation' },
-              { label: 'Return Policy', name: 'returnPolicy' },
-            ].map(({ label, name }) => (
-              <div key={name}>
-                <label htmlFor={name} className="block text-sm font-medium mb-1">
-                  {label}
-                </label>
-                <textarea
-                  id={name}
-                  name={name}
-                  value={product[name]}
-                  onChange={handleInputChange}
-                  rows="3"
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                />
-              </div>
-            ))}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Ảnh</label>
+          <div className="flex items-center mt-2 gap-4">
+            <UploadCloud className="w-4 h-4" />
+              <ImageUpload images={product.images || images} maxImages={5} defaultValue={product.images || images} setImages={setImages}/>
           </div>
         </div>
 
-        {/* Submit Button */}
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-            disabled={loading}
-          >
-            {loading ? "Creating..." : "Create Product"}
-          </button>
-        </div>
+       <div className="flex items-center justify-end w-full">
+       <motion.button
+          type="submit"
+          whileTap={{ scale: 0.95 }}
+          className="gap-2 bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-md transition mt-4"
+        >
+          <Save className="w-5 h-5 inline-block" />
+          <span> Cập nhật sản phẩm</span>
+        </motion.button>
+       </div>
       </form>
-    </div>
+    </motion.div>
   )
 }
 

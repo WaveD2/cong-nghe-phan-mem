@@ -45,13 +45,13 @@ function App() {
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/" element={<Home />} />
 
-                <Route path="/dashboard">
+                <Route path="/">
                   <Route
-                    path="admin"
+                    path="dashboard"
                     element={
                       <ProtectedRoute
                         allowedRoles={["admin"]}
-                        redirectTo="/dashboard/admin"
+                        redirectTo="/dashboard"
                       />
                     }
                   >

@@ -141,7 +141,7 @@ export default function Nav() {
                                                 {
                                                     user.role === 'admin' &&
                                                     <NavLink
-                                                        to={user.role === 'admin' ? '/dashboard/admin' : '/dashboard/customer'}
+                                                        to={user.role === 'admin' ? '/dashboard' : '/dashboard/customer'}
                                                         className="flex items-center px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-600"
                                                         onClick={() => setIsUserMenuOpen(false)}
                                                     >
@@ -257,7 +257,7 @@ export default function Nav() {
                                             <span className="font-medium text-gray-700">{user.name || 'User'}</span>
                                         </div>
                                         <NavLink
-                                            to={user.role === 'admin' ? '/dashboard/admin' : '/dashboard/customer'}
+                                            to={user.role === 'admin' ? '/dashboard' : '/dashboard/customer'}
                                             className="flex items-center px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-600"
                                             onClick={() => setIsMobileMenuOpen(false)}
                                         >
