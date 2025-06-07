@@ -1,12 +1,13 @@
 import { useCallback, useMemo, useState } from "react";
-import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { debounce } from "../../hepler";
-import LoadingTable from "./loadingTable";
 import LoadingComponent from "./loadingComponent";
+import "./style.css";
 
 export const CustomTable = ({ columns, data, pagination, onPageChange, onChangeLimit, onFilterChange, filterDebounce,
   loading, limit, filtersValueDefault
- }) => {
+}) => {
     const [localFilters, setLocalFilters] = useState(
       columns.reduce((acc, col) => ({ ...acc, [col.accessorKey]: '' }), {})
     );
@@ -33,83 +34,125 @@ export const CustomTable = ({ columns, data, pagination, onPageChange, onChangeL
     }, [data, columns, localFilters]);
 
     return (
-      <div className="overflow-x-auto w-full">
-        <table className="w-full border-collapse min-h-36">
-          <thead>
-            <tr className="bg-gray-100">
-              {columns.map((col) => (
-                <th key={col.accessorKey} className="p-2 text-left text-sm font-medium text-gray-700">
-                  <div className="flex flex-col">
-                    <span>{col.header}</span>
-                    {col.filterComponent && (
-                      <div className="mt-1">
-                        {col.filterComponent({
-                          value: filtersValueDefault[col?.accessorKey] || localFilters[col.accessorKey],
-                          onChange: (value) => handleFilterChange(col.accessorKey, value),
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <LoadingComponent />
-            ) :  (
-              filteredData.map((row, index) => {
-                return (
-                  <tr key={index} className="border-b border-gray-200 hover:bg-gray-50">
-                    {columns.map((col) => (
-                      <td key={col.accessorKey} className="p-2 text-sm text-gray-700">
-                        { col.cell ? col.cell({ getValue: () => row[col.accessorKey], row }) : row[col.accessorKey]}
-                      </td>
-                    ))}
-                  </tr>
-                )
-              })
-            )}
-          </tbody>
-        </table>
-        {/* Pagination */}
-        {pagination.totalPages >= 1 && (
-          <div className="flex items-center justify-between mt-4">
-            <span className="text-sm text-gray-600">
-              Trang {pagination.page} / {pagination.totalPages}
-            </span>
-            <div className="flex items-center gap-2">
-            <div className="flex items-center space-x-2 text-sm text-gray-700">
-              <select
-                id="limit"
-                value={limit || 10}
-                onChange={(e) => onChangeLimit(e.target.value)}
-                className="border border-gray-300 rounded-md px-2 py-1 bg-white shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              >
-                {[10, 15, 20,50, 100].map((value) => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="w-full"
+      >
+        <div className="overflow-y-auto max-h-[500px] custom-scrollbar">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-gray-200 border-collapse rounded-tr-md">
+                {columns.map((col) => (
+                  <th
+                    key={col.accessorKey}
+                    className="p-4 text-left text-sm font-semibold text-gray-800 sticky top-0 bg-gray-200 z-10"
+                  >
+                    <div className="flex flex-col">
+                      <span>{col.header}</span>
+                      {col.filterComponent && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          transition={{ duration: 0.2 }}
+                          className="mt-2"
+                        >
+                          {col.filterComponent({
+                            value: filtersValueDefault[col?.accessorKey] || localFilters[col.accessorKey],
+                            onChange: (value) => handleFilterChange(col.accessorKey, value),
+                          })}
+                        </motion.div>
+                      )}
+                    </div>
+                  </th>
                 ))}
-              </select>
-             </div>
-              <button
-                onClick={() => onPageChange(pagination.page - 1)}
-                disabled={pagination.page === 1}
-                className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50"
-              >
-                <FiChevronLeft size={18} />
-              </button>
-              <button
-                onClick={() => onPageChange(pagination.page + 1)}
-                disabled={pagination.page === pagination.totalPages}
-                className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50"
-              >
-                <FiChevronRight size={18} />
-              </button>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={columns.length} className="h-[200px]">
+                    <LoadingComponent />
+                  </td>
+                </tr>
+              ) : (
+                <AnimatePresence>
+                  {filteredData.map((row, index) => (
+                    <motion.tr
+                      key={index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.3 }}
+                      className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                    >
+                      {columns.map((col) => (
+                        <td key={col.accessorKey} className="p-4 text-sm text-gray-700">
+                          {col.cell
+                            ? col.cell({ getValue: () => row[col?.accessorKey], row })
+                            : row[col?.accessorKey]}
+                        </td>
+                      ))}
+                    </motion.tr>
+                  ))}
+                </AnimatePresence>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {pagination.totalPages >= 1 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+            className="flex items-center justify-between mt-6"
+          >
+            <p className="text-sm text-gray-600">
+              Trang {pagination.page} / {pagination.totalPages}
+            </p>
+            <div className="flex items-center gap-4">
+              <p className="text-sm text-gray-600">
+                Tổng <span className="font-semibold text-blue-500">{pagination.total}</span> 
+              </p>
+              <div className="flex items-center space-x-2">
+                <select
+                  id="limit"
+                  value={limit || 10}
+                  onChange={(e) => onChangeLimit(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-1.5 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-700"
+                >
+                  {[10, 15, 20, 50, 100].map((value) => (
+                    <option key={value} value={value}>
+                      {value} dòng
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => onPageChange(pagination.page - 1)}
+                  disabled={pagination.page === 1}
+                  className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5 text-gray-600" />
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => onPageChange(pagination.page + 1)}
+                  disabled={pagination.page === pagination.totalPages}
+                  className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronRight className="w-5 h-5 text-gray-600" />
+                </motion.button>
+              </div>
             </div>
-          </div>
+          </motion.div>
         )}
-      </div>
+      </motion.div>
     );
-  };
+};

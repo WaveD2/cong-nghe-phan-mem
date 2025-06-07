@@ -1,16 +1,9 @@
-
-
 function LoadingComponent() {
-    return (
-       <div className="flex justify-center items-center h-[300px] w-full"> 
-         <div className="spinner-container">
-            <div className="spinner">
-                <div className="spinner-circle"></div>
-            </div>
-        </div>
-       </div>
-
-    );
+  return (
+    <div className="w-full h-[300px] flex items-center justify-center">
+      <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  );
 }
 
 export default LoadingComponent;

@@ -12,7 +12,7 @@ const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [contact, setContact] = useState("");
+  const [phone, setPhone] = useState("");
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
@@ -28,7 +28,7 @@ const Register = () => {
       formErrors.email = "Email sai định dạng";
     }
     if (!password) formErrors.password = "Vui lòng nhập mật khâu";
-    if (!contact) formErrors.contact = "Vui lòng điền số diện thoại";
+    if (!phone) formErrors.phone = "Vui lòng điền số diện thoại";
 
     setErrors(formErrors);
     return Object.keys(formErrors).length === 0;
@@ -41,7 +41,7 @@ const Register = () => {
 
     setIsLoading(true);
     try {
-      const res = await register(name, email, password, contact);
+      const res = await register(name, email, password, phone);
 
       console.log("Registration successful", res.data.success);
       if (res.data.success) {
@@ -153,7 +153,7 @@ const Register = () => {
           <div className="mb-6">
             <label
               className="block text-sm font-medium text-gray-700 mb-1"
-              htmlFor="contact"
+              htmlFor="phone"
             >
               Số điện thoại
             </label>
@@ -161,18 +161,18 @@ const Register = () => {
               <FaPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                id="contact"
-                name="contact"
-                value={contact}
-                onChange={(e) => setContact(e.target.value)}
+                id="phone"
+                name="phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 className={`mt-1 block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.contact ? "border-red-500" : "border-gray-300"
+                  errors.phone ? "border-red-500" : "border-gray-300"
                 }`}
                 placeholder="Nhập số diện thoại"
               />
             </div>
-            {errors.contact && (
-              <p className="mt-2 text-sm text-red-500">{errors.contact}</p>
+            {errors.phone && (
+              <p className="mt-2 text-sm text-red-500">{errors.phone}</p>
             )}
           </div>
 

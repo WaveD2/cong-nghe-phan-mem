@@ -53,7 +53,8 @@ function ManageProductIndividual() {
 
   if (loading) return <LoadingComponent />
   if (!product) return <div>Không tìm thấy sản phẩm</div>
- 
+  console.log("product", product);
+  
   return (
     <motion.div
       className="container mx-auto p-6 bg-white shadow-lg rounded-lg"
@@ -88,7 +89,7 @@ function ManageProductIndividual() {
               id="brand"
               name="brand"
               value={product.brand}
-              readOnly
+              onChange={handleInputChange}
               className="w-full mt-2 p-3 bg-gray-100 border border-gray-300 rounded-md text-gray-600"
             />
           </div>
@@ -169,21 +170,24 @@ function ManageProductIndividual() {
           ></textarea>
         </div>
 
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Ảnh sản phẩm</label>
-          <div className="flex items-center mt-2 gap-4">
-            <UploadCloud className="w-4 h-4" />
-              <ImageUpload images={product?.thumbnail || thumbnailPreview} maxImages={1} defaultValue={product.thumbnail || thumbnailPreview} setImages={setThumbnailPreview}/>
+            <label className="block text-sm font-medium text-gray-700">Ảnh sản phẩm</label>
+            <div className="flex items-center mt-2 gap-4">
+              <UploadCloud className="w-6 h-6 text-blue-400" />
+                <ImageUpload   maxImages={1} imagesDefault={[product.thumbnail]} setImages={setThumbnailPreview}/>
+            </div>
           </div>
-        </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Ảnh</label>
-          <div className="flex items-center mt-2 gap-4">
-            <UploadCloud className="w-4 h-4" />
-              <ImageUpload images={product.images || images} maxImages={5} defaultValue={product.images || images} setImages={setImages}/>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Ảnh</label>
+            <div className="flex items-center mt-2 gap-4">
+              <UploadCloud className="w-6 h-6 text-blue-400" />
+                <ImageUpload  maxImages={5} imagesDefault={product.images || images} setImages={setImages}/>
+            </div>
           </div>
-        </div>
+
+       </div>
 
        <div className="flex items-center justify-end w-full">
        <motion.button

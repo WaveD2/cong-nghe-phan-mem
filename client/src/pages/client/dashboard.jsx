@@ -107,13 +107,13 @@ export default function CustomerDashboard() {
                             Phone:{''}
                             {isEditing ? (
                                 <input
-                                    name="contact"
+                                    name="phone"
                                     className="p-1 border border-gray-300 rounded w-full"
-                                    value={updatedData.contact }
+                                    value={updatedData.phone }
                                     onChange={handleChange}
                                 />
                             ) : (
-                                customerData?.contact
+                                customerData?.phone
                             )}
                         </label>
                         <label className="text-gray-600">

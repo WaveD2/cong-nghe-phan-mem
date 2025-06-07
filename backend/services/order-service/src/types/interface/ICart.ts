@@ -7,7 +7,7 @@ export interface CartItem {
   quantity: number;
 }
 
-export default interface ICart extends Document {
+export interface ICart extends Document {
   userId: string | IUser;
   items: CartItem[];
 }

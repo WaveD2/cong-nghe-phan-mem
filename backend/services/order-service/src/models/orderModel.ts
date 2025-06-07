@@ -12,8 +12,8 @@ const OrderItemSchema = new Schema<IOrderItem>({
   price: { type: Number, required: true },
   status: {
     type: String,
-    enum: ["Pending", "Shipped", "Delivered", "Cancelled" , "Completed"],
-    default: "Pending",
+    enum: ["pending", "shipped", "delivered", "cancelled" , "completed"],
+    default: "pending",
   },
 });
 
@@ -24,6 +24,7 @@ const AddressSchema = new Schema<IAddress>({
   street: { type: String, required: true },
   city: { type: String, required: true },
   state: { type: String, required: true },
+  detail : { type: String },
 });
 
 const orderSchema = new Schema<IOrder>(
@@ -41,12 +42,13 @@ const orderSchema = new Schema<IOrder>(
     },
     status: {
       type: String,
-      enum: ["Pending", "Shipped", "Delivered", "Cancelled", "Completed"],
-      default: "Pending",
+      enum: ["pending", "shipped", "delivered", "cancelled", "completed"],
+      default: "pending",
     },
     paymentMethod: {
       type: String,
-      required: true,
+      enum: ["cod", "momo", "zalopay", "vnpay", "paypal", "stripe", "bank_transfer", "credit_card"],
+      default: "cod",
     },
     isDelivered: { type: Boolean, default: false },
     isPaid: { type: Boolean, default: false },
@@ -56,11 +58,9 @@ const orderSchema = new Schema<IOrder>(
     },
     shippedDate: {
       type: Date,
-      default: null,
     },
     deliveryDate: {
       type: Date,
-      required: true,
     },
   },
   { timestamps: true }

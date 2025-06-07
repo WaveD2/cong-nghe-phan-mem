@@ -1,5 +1,7 @@
-import { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import apiClient from '../components/helper/axios';
+
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -8,106 +10,88 @@ export const AuthProvider = ({ children }) => {
     name: '',
     email: '',
     role: '',
-    avatar: ''
+    avatar: '',
+    phone: "",
   });
-  
-  const [isAuthenticated, setIsAuthenticated] = useState(false); 
-  const [isLoading, setIsLoading] = useState(true); 
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const location = useLocation();
+  const navigate = useNavigate();
 
+  // Check authentication status on mount
   useEffect(() => {
     const checkAuth = async () => {
       try {
-          const res = await apiClient.post('/api/user-service/verifyme', {}, {
-            withCredentials: true,
-          });
-          console.log("Verify me::::", res)
-          if(res.data.success){
-            setUser(res.data.user);
-            setIsAuthenticated(true);
-          }
-      } catch (error ) {
-          setIsAuthenticated(false);
-          setUser(null);
-          console.log("Verify me error", error);
-          
+        const res = await apiClient.post('/api/user-service/verifyme', {}, {
+          withCredentials: true,
+        });
+        if (res.data.success) {
+          setUser(res.data.user);
+          setIsAuthenticated(true);
+        }
+      } catch (error) {
+        setIsAuthenticated(false);
+        setUser(null);
       }
       setIsLoading(false);
-  };
+    };
 
-  checkAuth();
-}, []);
+    checkAuth();
+  }, []);
 
+  // Parse URL query parameters
+  const getQueryParams = useCallback(() => {
+    const searchParams = new URLSearchParams(location.search);
+    return {
+      search: searchParams.get('search') || '',
+      filter: searchParams.get('filter') || '',
+      page: parseInt(searchParams.get('page')) || 1,
+      limit: parseInt(searchParams.get('limit')) || 10
+    };
+  }, [location.search]);
 
-useEffect(() => {
-  // console.log("Updated user state:", user);
-  // console.log("Updated isAuthenticated state:", isAuthenticated);
-}, [user]);
-
-
-  const register= async (name,email,password, contact)=>{
-    try{
-      const res=await apiClient.post('/api/user-service/register',{name,email,password, phone: contact}, {
-        withCredentials: true
-      } );
-      console.log("register::::", res.data);  
-      if(res.data.success){
-          console.log("Register", res)
-          setUser(res.data);
-          setIsAuthenticated(false);
+  // Update URL query parameters
+  const updateQueryParams = useCallback((params) => {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) {
+        searchParams.set(key, value);
       }
-      // console.log(user)
-      return res
-    }catch(err){
+    });
+    navigate(`${location.pathname}?${searchParams.toString()}`, { replace: true });
+  }, [navigate, location.pathname]);
+
+  // Register function
+  const register = async ({name, email, password, role,phone ,isActive ,avatar }) => {
+    try {
+      const res = await apiClient.post('/api/user-service/admin-create', {
+        name,
+        email,
+        password,
+        phone,
+        avatar,
+        isActive,
+        role
+      }, {
+        withCredentials: true
+      });
+      return res;
+    } catch (err) {
       console.error('Register error:', err);
       throw err;
-  }};
-
-  const requestForgotPassword= async (email)=>{
-    try{
-      const res=await apiClient.post('/api/user-service/forgot-password/request',{email}, {
-        withCredentials: true
-      });
-      console.log("Verify forgot-password", res)
-      return res
-    }catch(err){
-      console.error('OTP error:', err);
-      throw err;
-  }};
-
-  const confirmForgotPassword= async (email,otp)=>{
-    try{
-      const res=await apiClient.post('/api/user-service/forgot-password/confirm',{email, otp}, {
-        withCredentials: true
-      });
-      console.log("Verify confirmForgotPassword", res)
-      return res.data
-    }catch(err){
-      console.error('OTP error:', err);
-      throw err;
-  }};
-
-  const forgotPassword= async (email,password)=>{
-    try{
-      const res=await apiClient.post('/api/user-service/forgot-password',{email, newPassword: password }, {
-        withCredentials: true
-      });
-      console.log("Verify confirmForgotPassword", res)
-      return res.data
-    }catch(err){
-      console.error('OTP error:', err);
-      throw err;
-  }};
+    }
+  };
 
   // Login function
   const login = async (email, password) => {
     try {
-      const res = await apiClient.post(
-        '/api/user-service/login',
-        { email, password },
-      
-      );
-      console.log("login::::", res.data);
-      if(res.data.success){
+      const res = await apiClient.post('/api/user-service/login', {
+        email,
+        password
+      }, {
+        withCredentials: true
+      });
+      if (res.data.success) {
         setUser(res.data);
         setIsAuthenticated(true);
       }
@@ -118,21 +102,76 @@ useEffect(() => {
     }
   };
 
+  // Logout function
   const logout = async () => {
     try {
-      await apiClient.post('/api/user-service/logout');
+      await apiClient.post('/api/user-service/logout', {}, {
+        withCredentials: true
+      });
       setUser(null);
       setIsAuthenticated(false);
     } catch (err) {
       console.error('Logout error:', err);
+      throw err;
     }
   };
 
-
-  const getAdminAllUsers = async () => {
+  // Forgot password request
+  const requestForgotPassword = async (email) => {
     try {
-      const res = await apiClient.get('/api/user-service');
-      // console.log("Get all users", res.data.users)
+      const res = await apiClient.post('/api/user-service/forgot-password/request', { email }, {
+        withCredentials: true
+      });
+      return res;
+    } catch (err) {
+      console.error('Forgot password request error:', err);
+      throw err;
+    }
+  };
+
+  // Confirm forgot password OTP
+  const confirmForgotPassword = async (email, otp) => {
+    try {
+      const res = await apiClient.post('/api/user-service/forgot-password/confirm', { email, otp }, {
+        withCredentials: true
+      });
+      return res.data;
+    } catch (err) {
+      console.error('Confirm forgot password error:', err);
+      throw err;
+    }
+  };
+
+  // Reset password
+  const forgotPassword = async (email, password) => {
+    try {
+      const res = await apiClient.post('/api/user-service/forgot-password', {
+        email,
+        newPassword: password
+      }, {
+        withCredentials: true
+      });
+      return res.data;
+    } catch (err) {
+      console.error('Reset password error:', err);
+      throw err;
+    }
+  };
+
+  // Get all users with search and filter
+  const getAdminAllUsers = async (customParams = {}) => {
+    try {
+      const queryParams = { ...getQueryParams(), ...customParams };
+      const searchParams = new URLSearchParams();
+      
+      if (queryParams.search) searchParams.set('search', queryParams.search);
+      if (queryParams.filter) searchParams.set('filter', queryParams.filter);
+      if (queryParams.page) searchParams.set('page', queryParams.page);
+      if (queryParams.limit) searchParams.set('limit', queryParams.limit);
+
+      const res = await apiClient.get(`/api/user-service?${searchParams.toString()}`, {
+        withCredentials: true
+      });
       return res.data;
     } catch (err) {
       console.error('Get all users error:', err);
@@ -140,38 +179,103 @@ useEffect(() => {
     }
   };
 
+  // Get user by ID
   const getAdminUsersById = async (id) => {
     try {
-      const res = await apiClient.get(`/admin/users/${id}`);
-      console.log("Get user by id", res.data);
+      const res = await apiClient.get(`/api/user-service/${id}`, {
+        withCredentials: true
+      });
       return res.data;
     } catch (err) {
       console.error('Get user by id error:', err);
       throw err;
-  }
-  }
-
-  const adminUserUpdate=async(id,user)=>{
-    try{
-        const res=await apiClient.put(`/admin/users/${id}`,user);
-        console.log("Update user by id", res.data)
-        return res.data
     }
-    catch(err){
-      console.error('Update user by id error:', err);
-      throw err;
-  }
-  } 
+  };
 
-  
+  // Update user
+  const adminUserUpdate = async (id, userData) => {
+    try {
+      const res = await apiClient.put(`/api/user-service/${id}`, userData, {
+        withCredentials: true
+      });
+      // Update current user if the updated user is the current user
+      if (user && user.id === id) {
+        setUser(res.data.user);
+      }
+      return res.data;
+    } catch (err) {
+      console.error('Update user error:', err);
+      throw err;
+    }
+  };
+
+  // xóa
+  const adminUserDelete = async (id) => {
+    try {
+      const res = await apiClient.delete(`/api/user-service/admin-delete/${id}`, {
+        withCredentials: true
+      });
+
+      return res.data
+    } catch (err) {
+      console.error('Update user error:', err);
+      throw err;
+    }
+  };
+
+  const updateCurrentUser = async (userData) => {
+    try {
+      const res = await apiClient.put(`/api/user-service/me`, userData, {
+        withCredentials: true
+      });
+      setUser(res.data.user);
+      return res.data;
+    } catch (err) {
+      console.error('Update current user error:', err);
+      throw err;
+    }
+  };
+
+  // Search and filter users
+  const searchAndFilterUsers = async (searchTerm, filter, page = 1, limit = 10) => {
+    try {
+      const params = { search: searchTerm, filter, page, limit };
+      updateQueryParams(params);
+      return await getAdminAllUsers(params);
+    } catch (err) {
+      console.error('Search and filter users error:', err);
+      throw err;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user,
-     isAuthenticated,getAdminAllUsers,adminUserUpdate, getAdminUsersById,isLoading,
-      login,register, logout,requestForgotPassword,confirmForgotPassword,forgotPassword }}>
+    <AuthContext.Provider value={{
+      user,
+      isAuthenticated,
+      isLoading,
+      login,
+      register,
+      logout,
+      requestForgotPassword,
+      confirmForgotPassword,
+      forgotPassword,
+      getAdminAllUsers,
+      getAdminUsersById,
+      adminUserUpdate,
+      updateCurrentUser,
+      searchAndFilterUsers,
+      getQueryParams,
+      adminUserDelete
+    }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

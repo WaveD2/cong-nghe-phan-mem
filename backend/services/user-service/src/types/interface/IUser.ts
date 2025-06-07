@@ -7,4 +7,5 @@ export interface UserType extends Document {
   role: "admin" | "user";
   avatar: string;
   phone: string;
+  isActive: boolean;
 }

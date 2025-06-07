@@ -8,6 +8,7 @@ import consumeMessage from './utils/consumeMessage';
 import { errorHandler } from './middlewares/errMiddlware';
 import cors from "cors";
 import Product from './models/productModel';
+import Cart from './models/cartModel';
 
 config()
 dbConnect();
@@ -30,7 +31,8 @@ app.use(authMid);
 app.use(apiRoot, cartRouter);
 
 ( async ()=>{
-  await Product.deleteMany({})
+  // await Product.deleteMany({})
+  // await Cart.deleteMany({})
 })()
 
 app.use(errorHandler);  

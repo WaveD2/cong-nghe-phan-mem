@@ -1,7 +1,7 @@
 import { Response } from "express";
 import { Model, Types } from "mongoose";
 import { AuthRequest } from "../types/api";
-import {IProduct} from "../types/interface/IProduct";
+import { IProduct } from "../types/interface/IProduct";
 import ICart from "../types/interface/ICart";
 import Product from "../models/productModel";
 import Cart from "../models/cartModel";
@@ -16,6 +16,8 @@ const ERROR_MESSAGES = {
   CART_NOT_FOUND: "Không tìm thấy giỏ hàng",
   CART_REMOVE_ERROR: "Lỗi xóa giỏ hàng",
   SERVER_ERROR: "Lỗi server",
+  CART_EMPTY: "Giỏ hàng trống",
+  UNAUTHORIZED: "Không có quyền truy cập",
 };
 
 interface CartItemInput {
@@ -168,6 +170,103 @@ class CartController {
     } catch (error) {
       console.error("Lỗi xóa sản phẩm khỏi giỏ hàng:", error);
       res.status(500).json({ message: ERROR_MESSAGES.CART_REMOVE_ERROR });
+    }
+  }
+
+  async updateCartItemQuantity(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const input: CartItemInput = req.body;
+      if (!this.validateCartInput(input, res)) return;
+
+      const objectId = this.validateObjectId(input.id, res);
+      if (!objectId) return;
+
+      const product = await this.productModel.findById(objectId);
+      if (!product) {
+        res.status(404).json({ message: ERROR_MESSAGES.PRODUCT_NOT_FOUND });
+        return;
+      }
+
+      if (product.stock < input.quantity) {
+        res.status(400).json({ message: ERROR_MESSAGES.INSUFFICIENT_STOCK });
+        return;
+      }
+
+      const userId = this.getUserId(req);
+      const updatedCart = await this.cartModel.findOneAndUpdate(
+        { userId, "items.productId": objectId },
+        { $set: { "items.$.quantity": Number(input.quantity) } },
+        { new: true }
+      );
+
+      if (!updatedCart) {
+        res.status(404).json({ message: ERROR_MESSAGES.CART_NOT_FOUND });
+        return;
+      }
+
+      await this.publishToKafka(updatedCart, Event.UPDATE);
+      res.status(200).json({ message: "Cập nhật số lượng sản phẩm thành công", data: updatedCart });
+    } catch (error) {
+      console.error("Lỗi cập nhật số lượng sản phẩm:", error);
+      res.status(500).json({ message: ERROR_MESSAGES.SERVER_ERROR });
+    }
+  }
+
+  async clearCart(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const userId = this.getUserId(req);
+      const clearedCart = await this.cartModel.findOneAndUpdate(
+        { userId },
+        { $set: { items: [] } },
+        { new: true }
+      );
+
+      if (!clearedCart) {
+        res.status(404).json({ message: ERROR_MESSAGES.CART_NOT_FOUND });
+        return;
+      }
+
+      await this.publishToKafka(clearedCart, Event.UPDATE);
+      res.status(200).json({ message: "Xóa toàn bộ giỏ hàng thành công", data: clearedCart });
+    } catch (error) {
+      console.error("Lỗi xóa toàn bộ giỏ hàng:", error);
+      res.status(500).json({ message: ERROR_MESSAGES.SERVER_ERROR });
+    }
+  }
+
+  async getAllCarts(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      // Kiểm tra quyền admin (giả định req.user.role tồn tại)
+      if (req.user?.role !== "admin") {
+        res.status(403).json({ message: ERROR_MESSAGES.UNAUTHORIZED });
+        return;
+      }
+
+      const carts = await this.cartModel
+        .find()
+        .populate("items.productId")
+        .lean();
+      res.status(200).json({ data: carts });
+    } catch (error) {
+      console.error("Lỗi lấy danh sách giỏ hàng:", error);
+      res.status(500).json({ message: ERROR_MESSAGES.SERVER_ERROR });
+    }
+  }
+
+  async checkCartStatus(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const userId = this.getUserId(req);
+      const cart = await this.cartModel.findOne({ userId }).lean();
+
+      if (!cart || cart.items.length === 0) {
+        res.status(200).json({ message: ERROR_MESSAGES.CART_EMPTY, data: null });
+        return;
+      }
+
+      res.status(200).json({ message: "Giỏ hàng có sản phẩm", data: cart });
+    } catch (error) {
+      console.error("Lỗi kiểm tra trạng thái giỏ hàng:", error);
+      res.status(500).json({ message: ERROR_MESSAGES.SERVER_ERROR });
     }
   }
 }

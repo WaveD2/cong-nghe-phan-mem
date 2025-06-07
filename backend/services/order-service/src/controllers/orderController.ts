@@ -1,8 +1,8 @@
 import { Response, NextFunction } from "express";
 import { Model, Types } from "mongoose";
 import { AuthRequest } from "../types/api";
-import ICart from "../types/interface/ICart";
-import {IProduct} from "../types/interface/IProduct";
+import { ICart } from "../types/interface/ICart";
+import { IProduct } from "../types/interface/IProduct";
 import { IOrder } from "../types/interface/IOrder";
 import Cart from "../models/cartModel";
 import Product from "../models/productModel";
@@ -19,12 +19,23 @@ const ERROR_MESSAGES = {
   INSUFFICIENT_STOCK: "Số lượng đặt hàng vượt quá số lượng trong kho",
   ORDER_NOT_FOUND: "Không tìm thấy đơn hàng",
   SERVER_ERROR: "Lỗi server",
+  INVALID_STATUS: "Trạng thái đơn hàng không hợp lệ",
+  CANNOT_MODIFY: "Không thể sửa đổi đơn hàng đã xử lý",
+  UNAUTHORIZED: "Không có quyền truy cập",
 };
 
 interface ShippingAddress {
   street: string;
   city: string;
   state: string;
+  detail?: string;
+}
+
+interface OrderReport {
+  totalOrders: number;
+  totalRevenue: number;
+  statusBreakdown: { [key: string]: number };
+  averageOrderValue: number;
 }
 
 class OrderController {
@@ -73,7 +84,7 @@ class OrderController {
 
   async createOrder(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { street, city, state } = req.body as ShippingAddress;
+      const { street, city, state, detail = "", paymentMethod } = req.body as ShippingAddress & { paymentMethod?: string };
       if (!this.validateShippingAddress({ street, city, state }, res)) return;
 
       const userId = this.getUserId(req);
@@ -83,10 +94,9 @@ class OrderController {
         return;
       }
 
-      const orderItems: Array<{ productId: Types.ObjectId; name: string; quantity: number; price: number }> = [];
+      const orderItems: Array<{ productId: Types.ObjectId | null; name: string; quantity: number; price: number }> = [];
       let totalAmount = 0;
 
-      // Kiểm tra và cập nhật sản phẩm
       for (const item of cart.items) {
         const product = await this.productModel.findById(item.productId);
         if (!product) {
@@ -104,8 +114,7 @@ class OrderController {
         const updatedProduct = await product.save();
         const productPrice = product.price * item.quantity;
         orderItems.push({
-          //@ts-ignore
-          productId: item.productId,
+          productId: this.validateObjectId(item.productId, res),
           name: product.title,
           quantity: item.quantity,
           price: productPrice,
@@ -115,17 +124,15 @@ class OrderController {
         await this.publishToKafka("Order-Topic-Product", updatedProduct, Event.UPDATE);
       }
 
-      // Tạo đơn hàng
       const order = await this.orderModel.create({
         userId,
         items: orderItems,
-        shippingAddress: { street, city, state },
+        shippingAddress: { street, city, state, detail },
         totalAmount,
-        paymentMethod: "Cash on Delivery",
-        status: "Pending",
+        paymentMethod: paymentMethod || "cod",
+        status: "pending",
       });
 
-      // Xóa giỏ hàng
       cart.items = [];
       const updatedCart = await this.cartModel.findOneAndUpdate(
         { userId },
@@ -149,8 +156,9 @@ class OrderController {
       if (!objectId) return;
 
       const userId = this.getUserId(req);
+      const query = req.user.role === "admin" ? { _id: objectId } : { userId, _id: objectId };
       const order = await this.orderModel
-        .findOne({ userId, _id: objectId })
+        .findOne(query)
         .populate("userId")
         .populate("items.productId")
         .lean();
@@ -170,8 +178,9 @@ class OrderController {
   async getAllOrders(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = this.getUserId(req);
+      const query = req.user.role === "admin" ? {} : { userId };
       const orders = await this.orderModel
-        .find({ userId })
+        .find(query)
         .populate("userId")
         .populate("items.productId")
         .lean();
@@ -184,6 +193,252 @@ class OrderController {
       res.status(200).json({ data: orders });
     } catch (error) {
       console.error("Lỗi lấy danh sách đơn hàng:", error);
+      next(error);
+    }
+  }
+
+  async updateOrder(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { status, shippingAddress } = req.body;
+      const objectId = this.validateObjectId(id, res);
+      if (!objectId) return;
+
+      const userId = this.getUserId(req);
+      const query = req.user.role === "admin" ? { _id: objectId } : { _id: objectId, userId };
+      const order = await this.orderModel.findOne(query);
+
+      if (!order) {
+        res.status(404).json({ message: ERROR_MESSAGES.ORDER_NOT_FOUND });
+        return;
+      }
+
+      const updateData: Partial<IOrder> = {};
+
+      if (status) {
+        const validStatuses = ["pending", "shipped", "delivered", "cancelled", "completed"];
+        if (!validStatuses.includes(status)) {
+          res.status(400).json({ message: ERROR_MESSAGES.INVALID_STATUS });
+          return;
+        }
+        updateData.status = status;
+
+        if (status === "shipped") updateData.shippedDate = new Date();
+        if (status === "delivered") {
+          updateData.deliveryDate = new Date();
+          updateData.isDelivered = true;
+        }
+        if (status === "completed") updateData.isPaid = true;
+      }
+
+      if (shippingAddress) {
+        if (!this.validateShippingAddress(shippingAddress, res)) return;
+        updateData.shippingAddress = shippingAddress;
+      }
+
+      const updatedOrder = await this.orderModel
+        .findOneAndUpdate(
+          query,
+          { $set: updateData },
+          { new: true }
+        )
+        .populate("userId")
+        .populate("items.productId");
+
+
+      res.status(200).json({ message: "Cập nhật đơn hàng thành công", data: updatedOrder });
+    } catch (error) {
+      console.error("Lỗi cập nhật đơn hàng:", error);
+      next(error);
+    }
+  }
+
+  async deleteOrder(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const objectId = this.validateObjectId(id, res);
+      if (!objectId) return;
+
+      const userId = this.getUserId(req);
+      const query = req.user.role === 'admin' ? { _id: objectId } : { _id: objectId, userId };
+      const order = await this.orderModel.findOne(query);
+
+      if (!order) {
+        res.status(404).json({ message: ERROR_MESSAGES.ORDER_NOT_FOUND });
+        return;
+      }
+
+      if (order.status !== "pending") {
+        res.status(400).json({ message: ERROR_MESSAGES.CANNOT_MODIFY });
+        return;
+      }
+
+      for (const item of order.items) {
+        const product = await this.productModel.findById(item.productId);
+        if (product) {
+          product.stock += item.quantity;
+          await product.save();
+          await this.publishToKafka("Order-Topic-Product", product, Event.UPDATE);
+        }
+      }
+
+      await this.orderModel.deleteOne(query);
+
+      res.status(200).json({ message: "Xóa đơn hàng thành công" });
+    } catch (error) {
+      console.error("Lỗi xóa đơn hàng:", error);
+      next(error);
+    }
+  }
+
+  async cancelOrder(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const objectId = this.validateObjectId(id, res);
+      if (!objectId) return;
+
+      const userId = this.getUserId(req);
+      const query = req.user.role === 'admin' ? { _id: objectId } : { _id: objectId, userId };
+      const order = await this.orderModel.findOne(query);
+
+      if (!order) {
+        res.status(404).json({ message: ERROR_MESSAGES.ORDER_NOT_FOUND });
+        return;
+      }
+
+      if (order.status !== "pending") {
+        res.status(400).json({ message: ERROR_MESSAGES.CANNOT_MODIFY });
+        return;
+      }
+
+      for (const item of order.items) {
+        const product = await this.productModel.findById(item.productId);
+        if (product) {
+          product.stock += item.quantity;
+          await product.save();
+          await this.publishToKafka("Order-Topic-Product", product, Event.UPDATE);
+        }
+      }
+
+      order.status = "cancelled";
+      const updatedOrder = await order.save();
+
+      res.status(200).json({ message: "Hủy đơn hàng thành công", data: updatedOrder });
+    } catch (error) {
+      console.error("Lỗi hủy đơn hàng:", error);
+      next(error);
+    }
+  }
+
+  async getAllOrdersAdmin(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { status, startDate, endDate } = req.query;
+      const query: any = {};
+
+      if (status) query.status = status;
+      if (startDate || endDate) {
+        query.orderDate = {};
+        if (startDate) query.orderDate.$gte = new Date(startDate as string);
+        if (endDate) query.orderDate.$lte = new Date(endDate as string);
+      }
+
+      const orders = await this.orderModel
+        .find(query)
+        .populate("userId")
+        .populate("items.productId")
+        .sort({ orderDate: -1 })
+        .lean();
+
+      if (!orders.length) {
+        res.status(404).json({ message: ERROR_MESSAGES.ORDER_NOT_FOUND });
+        return;
+      }
+
+      res.status(200).json({ data: orders });
+    } catch (error) {
+      console.error("Lỗi lấy danh sách đơn hàng admin:", error);
+      next(error);
+    }
+  }
+
+  async updateOrderStatusAdmin(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { status, isPaid } = req.body;
+      const objectId = this.validateObjectId(id, res);
+      if (!objectId) return;
+
+      const order = await this.orderModel.findById(objectId);
+      if (!order) {
+        res.status(404).json({ message: ERROR_MESSAGES.ORDER_NOT_FOUND });
+        return;
+      }
+
+      const updateData: Partial<IOrder> = {};
+
+      if (status) {
+        const validStatuses = ["pending", "shipped", "delivered", "cancelled", "completed"];
+        if (!validStatuses.includes(status)) {
+          res.status(400).json({ message: ERROR_MESSAGES.INVALID_STATUS });
+          return;
+        }
+        updateData.status = status;
+
+        if (status === "shipped") updateData.shippedDate = new Date();
+        if (status === "delivered") {
+          updateData.deliveryDate = new Date();
+          updateData.isDelivered = true;
+        }
+        if (status === "completed") updateData.isPaid = true;
+      }
+
+      if (typeof isPaid === "boolean") {
+        updateData.isPaid = isPaid;
+      }
+
+      const updatedOrder = await this.orderModel
+        .findByIdAndUpdate(
+          objectId,
+          { $set: updateData },
+          { new: true }
+        )
+        .populate("userId")
+        .populate("items.productId");
+
+
+      res.status(200).json({ message: "Cập nhật trạng thái đơn hàng thành công", data: updatedOrder });
+    } catch (error) {
+      console.error("Lỗi cập nhật trạng thái đơn hàng admin:", error);
+      next(error);
+    }
+  }
+
+  async getOrderReportAdmin(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { startDate, endDate } = req.query;
+      const query: any = {};
+
+      if (startDate || endDate) {
+        query.orderDate = {};
+        if (startDate) query.orderDate.$gte = new Date(startDate as string);
+        if (endDate) query.orderDate.$lte = new Date(endDate as string);
+      }
+
+      const orders = await this.orderModel.find(query).lean();
+
+      const report: OrderReport = {
+        totalOrders: orders.length,
+        totalRevenue: orders.reduce((sum, order) => sum + order.totalAmount, 0),
+        statusBreakdown: orders.reduce((acc, order) => {
+          acc[order.status] = (acc[order.status] || 0) + 1;
+          return acc;
+        }, {} as { [key: string]: number }),
+        averageOrderValue: orders.length ? orders.reduce((sum, order) => sum + order.totalAmount, 0) / orders.length : 0,
+      };
+
+      res.status(200).json({ message: "Báo cáo đơn hàng", data: report });
+    } catch (error) {
+      console.error("Lỗi tạo báo cáo đơn hàng:", error);
       next(error);
     }
   }

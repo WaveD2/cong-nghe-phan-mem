@@ -7,4 +7,11 @@ export default interface UserType extends Document {
   role: 'admin' | 'user'; 
   avatar: string;
   phone: string;
+  isActive: boolean
+}
+
+
+
+interface AuthRequest extends Request {
+  user: UserType; 
 }

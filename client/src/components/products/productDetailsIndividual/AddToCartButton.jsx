@@ -14,55 +14,52 @@ const AddToCartButton = ({ productId, onAddToCart }) => {
   const handleAddToCart = async () => {
     setIsAdding(true)
     try {
-      
-     console.log("productId",productId)
-      const response=await apiClient.post('/cart',{productId, quantity})
+      console.log("productId", productId)
+      const response = await apiClient.post('/cart', { productId, quantity })
       console.log(response.data)
-      // alert(response.data.message)
       showToast(response.data.message, "success")
     } catch (error) {
       console.error(error)
-      if(error.response.status===401)  return alert("Please Login First!!!")
-       return  showToast(error.response.data.message, "error")
-
-      
+      if (error.response.status === 401) return alert("Please Login First!!!")
+      return showToast(error.response.data.message, "error")
     } finally {
       setIsAdding(false)
     }
   }
 
   return (
-    <div className="flex items-center w-full justify-between space-x-2">
-      <div className="flex w-1/3 items-center border border-gray-300 rounded-l-full overflow-hidden">
+    <div className="flex items-center w-full justify-between space-x-3">
+      <div className="flex items-center border border-gray-200 rounded-full shadow-sm bg-white">
         <button
-          className="p-2 hover:bg-gray-100 transition-colors disabled:opacity-50"
+          className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={decrementQuantity}
           disabled={isAdding}
         >
-          <Minus className="h-4 w-4" />
+          <Minus className="h-4 w-4 text-gray-600" />
           <span className="sr-only">Giảm</span>
         </button>
-        <span className="w-10 text-center font-medium">{quantity}</span>
+        <span className="w-12 text-center font-medium text-gray-800">{quantity}</span>
         <button
-          className="p-2 hover:bg-gray-100 transition-colors disabled:opacity-50"
+          className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={incrementQuantity}
           disabled={isAdding}
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-4 w-4 text-gray-600" />
           <span className="sr-only">Tăng</span>
         </button>
       </div>
       <button
-        className="flex flex-1 items-center gap-2 md:text-sm text-base  rounded-r-full px-2 py-[6px] bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50"
+        className="flex flex-1 items-center justify-center gap-2 text-sm font-medium rounded-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
         onClick={handleAddToCart}
         disabled={isAdding}
       >
-        <ShoppingCart className="h-4"  />
-          <span style={{textTransform:"none"}}>{isAdding ? "Đang xử lý..." : "Thêm vào giỏ"}</span>
+        <ShoppingCart className="h-5 w-5" />
+        <span style={{ textTransform: "none" }}>
+          {isAdding ? "Đang xử lý..." : "Thêm vào giỏ"}
+        </span>
       </button>
     </div>
   )
 }
 
 export default AddToCartButton
-

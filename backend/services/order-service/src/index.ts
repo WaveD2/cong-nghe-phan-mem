@@ -8,6 +8,8 @@ import consumeMessage from "./utils/consumeMessage";
 import { errorHandler } from "./middlewares/errMiddlware";
 import cors from "cors";
 import Product from "./models/productModel";
+import Order from "./models/orderModel";
+import Cart from "./models/cartModel";
 
 config();
 dbConnect();
@@ -30,7 +32,9 @@ app.use(apiRoot, orderRoute);
 app.use(errorHandler);  
 
 ( async ()=>{
-  await Product.deleteMany({})
+  // await Product.deleteMany({})
+  // await Order.deleteMany({})
+  // await Cart.deleteMany({})
 })()
 
 process.on("unhandledRejection", (reason, promise) => {

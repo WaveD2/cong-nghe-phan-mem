@@ -1,4 +1,4 @@
-import { Schema, model, models } from 'mongoose';
+import mongoose, { Schema, model, models } from 'mongoose';
 import { IProduct } from '../types/interface/IProduct';
 const ProductSchema = new Schema<IProduct>(
   {
@@ -59,5 +59,6 @@ const ProductSchema = new Schema<IProduct>(
   { timestamps: true }
 );
 
-const Product = models.Product || model<IProduct>('Product', ProductSchema);
+const Product = mongoose.model<IProduct>("product", ProductSchema);
+
 export default Product;

@@ -142,7 +142,6 @@ const ProductProvider = ({ children }) => {
   const fetchProducts = useCallback(async (customFilters = null) => {
     const filterParams = customFilters || filters;
     const cleanFilters = cleanFiltersForApi(filterParams);
-    
     if (!hasValidFilters(filterParams)) {
       setProducts([]);
       return [];

@@ -1,26 +1,22 @@
-import  { useState, useCallback, useMemo, useEffect } from "react";
+import { useCallback, useMemo, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { FiPlus, FiEdit2, FiTrash2 } from "react-icons/fi";
 import Select from "react-select";
-import { motion } from "framer-motion";
-import { useProducts} from "../../context/productContext";
-import {CustomTable} from "../../components/helper/table.v2.jsx"
-import { CATEGORIES } from "../../constant.js";
+import { AnimatePresence, motion } from "framer-motion";
+import { useProducts } from "../../context/productContext";
+import { CustomTable } from "../../components/helper/table.v2.jsx";
+import { CATEGORIES , DEBOUNCE_DELAY} from "../../constant.js";
 import { formatCurrencyVND } from "../../hepler.js";
-
-const DEBOUNCE_DELAY = 300;
+import ConfirmationPopup from "../../components/helper/popup.jsx";
+import { X } from "lucide-react";
 
 const ManageProducts = () => {
-  const {
-    products,
-    filters,
-    resetFilters,
-    loading,
-    adminProductDelete,
-  } = useProducts();
+  const { products, filters, resetFilters, loading, adminProductDelete } =
+    useProducts();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [localLoading, setLocalLoading] = useState(false);
   const navigate = useNavigate();
+  const [productActive, setProductActive] = useState();
+  const [formData, setFormData] = useState();
 
   const pagination = products?.pagination || {
     page: 1,
@@ -46,23 +42,18 @@ const ManageProducts = () => {
     }
   }, []);
 
-
   // Handle product deletion
-  const handleDelete = useCallback(
-    async (id) => {
-      if (window.confirm("Bạn có chắc muốn xóa sản phẩm này?")) {
-        setLocalLoading(true);
-        try {
-          await adminProductDelete(id);
-        } catch (error) {
-          console.log("error::", error);
-        } finally {
-          setLocalLoading(false);
-        }
-      }
-    },
-    [adminProductDelete]
-  );
+  const handleDelete = async () => {
+    console.log("productActive::", productActive);
+
+    try {
+      await adminProductDelete(productActive._id);
+    } catch (error) {
+      console.log("error", error);
+    } finally {
+      setProductActive(null);
+    }
+  };
 
   // Handle pagination page change
   const handlePageChange = useCallback(
@@ -92,7 +83,7 @@ const ManageProducts = () => {
   // Handle column filter changes
   const handleColumnFilter = useCallback(
     (newFilters) => {
-      if(newFilters){
+      if (newFilters) {
         setSearchParams(() => {
           const newParams = new URLSearchParams();
           Object.entries(newFilters).forEach(([key, value]) => {
@@ -113,8 +104,6 @@ const ManageProducts = () => {
       {
         header: "Tên sản phẩm",
         accessorKey: "title",
-        filterFn: (row, value) =>
-          row.original.title.toLowerCase().includes(value.toLowerCase()),
         filterComponent: ({ value, onChange }) => (
           <input
             type="text"
@@ -128,7 +117,7 @@ const ManageProducts = () => {
         cell: ({ row }) => (
           <button
             onClick={() => {
-              navigate(`/dashboard/products/${row.original._id}`);
+              setFormData(row);
             }}
             className="text-blue-600 hover:underline"
           >
@@ -139,7 +128,6 @@ const ManageProducts = () => {
       {
         header: "Loại",
         accessorKey: "category",
-        filterFn: (row, value) => !value || row.original.category === value,
         filterComponent: ({ value, onChange }) => (
           <Select
             options={CATEGORIES}
@@ -165,15 +153,6 @@ const ManageProducts = () => {
       {
         header: "Giá tiền",
         accessorKey: "price",
-        filterFn: (row, value) => {
-          const [min, max] = value
-            ? value.split("-").map(Number)
-            : [0, Infinity];
-          return (
-            row.original?.price >= (min || 0) &&
-            (!max || row.original?.price <= max)
-          );
-        },
         filterComponent: ({ value, onChange }) => {
           const [min, max] = value ? value.split("-") : ["", ""];
           return (
@@ -196,16 +175,12 @@ const ManageProducts = () => {
           );
         },
         cell: ({ getValue }) => (
-          <span className="text-blue-500">
-            {formatCurrencyVND(getValue())}
-          </span>
+          <span className="text-blue-500">{formatCurrencyVND(getValue())}</span>
         ),
       },
       {
         header: "Số lượng",
         accessorKey: "stock",
-        filterFn: (row, value) =>
-          !value || row.original.stock === Number(value),
         filterComponent: ({ value, onChange }) => (
           <input
             type="number"
@@ -219,8 +194,6 @@ const ManageProducts = () => {
       {
         header: "Thương hiệu",
         accessorKey: "brand",
-        filterFn: (row, value) =>
-          row.original.brand.toLowerCase().includes(value.toLowerCase()),
         filterComponent: ({ value, onChange }) => (
           <input
             type="text"
@@ -246,7 +219,7 @@ const ManageProducts = () => {
               <FiEdit2 size={18} />
             </button>
             <button
-              onClick={() => handleDelete(row._id)}
+              onClick={() => setProductActive(row)}
               className="text-red-500 hover:text-red-700 transition"
               title="Xóa"
             >
@@ -256,19 +229,20 @@ const ManageProducts = () => {
         ),
       },
     ],
-    [ handleDelete]
+    []
   );
-  
-  
+
   return (
     <motion.div
-    className="container mx-auto p-6 bg-white shadow-lg rounded-lg"
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.4 }}>
-        <h2 className="text-2xl font-bold text-gray-900 mb-3">Quản lý sản phẩm</h2>
-      <div className="mx-auto p-6">
-        
+      className="container mx-auto p-3 "
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      <h2 className="text-2xl font-bold text-gray-900 mb-3">
+        Quản lý sản phẩm
+      </h2>
+      <div className="mx-auto bg-white shadow-lg rounded-lg p-3 ">
         <div className="flex justify-end mb-6">
           <div className="flex space-x-4">
             <button
@@ -286,7 +260,7 @@ const ManageProducts = () => {
           </div>
         </div>
 
-        <div className="overflow-x-auto w-full">
+        <div className="w-full">
           <CustomTable
             columns={columns}
             data={products?.data || []}
@@ -298,7 +272,7 @@ const ManageProducts = () => {
             }}
             onPageChange={handlePageChange}
             onChangeLimit={handleLimitChange}
-            loading={loading || localLoading}
+            loading={loading}
             onFilterChange={handleColumnFilter}
             filterDebounce={DEBOUNCE_DELAY}
             limit={pagination.limit}
@@ -306,6 +280,174 @@ const ManageProducts = () => {
           />
         </div>
       </div>
+
+      <AnimatePresence>
+        {formData && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 px-4 sm:px-6"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="bg-white w-full max-w-2xl rounded-2xl p-8 shadow-2xl max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-bold text-gray-900">
+                  Chi tiết sản phẩm
+                </h3>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setFormData(null)}
+                  className="text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </motion.button>
+              </div>
+
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="flex flex-col">
+                    <label className="text-sm font-semibold text-gray-600 mb-1">
+                      Tên sản phẩm
+                    </label>
+                    <p className="text-base text-gray-900 font-medium bg-gray-50 p-3 rounded-lg">
+                      {formData.title}
+                    </p>
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="text-sm font-semibold text-gray-600 mb-1">
+                      Danh mục
+                    </label>
+                    <p className="text-base text-gray-900 font-medium bg-gray-50 p-3 rounded-lg">
+                      {CATEGORIES.find((opt) => opt.value === formData.category)
+                        ?.label || formData.category}
+                    </p>
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="text-sm font-semibold text-gray-600 mb-1">
+                      Giá
+                    </label>
+                    <p className="text-base text-gray-900 font-medium bg-gray-50 p-3 rounded-lg">
+                      {formData.price.toLocaleString("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                      })}
+                    </p>
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="text-sm font-semibold text-gray-600 mb-1">
+                      Giảm giá (%)
+                    </label>
+                    <p className="text-base text-gray-900 font-medium bg-gray-50 p-3 rounded-lg">
+                      {formData.discount || 0}
+                    </p>
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="text-sm font-semibold text-gray-600 mb-1">
+                      Giá sau giảm
+                    </label>
+                    <p className="text-base text-gray-900 font-medium bg-gray-50 p-3 rounded-lg">
+                      {formData.discountedPrice.toLocaleString("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                      })}
+                    </p>
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="text-sm font-semibold text-gray-600 mb-1">
+                      S NUMBER lượng
+                    </label>
+                    <p className="text-base text-gray-900 font-medium bg-gray-50 p-3 rounded-lg">
+                      {formData.stock}
+                    </p>
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="text-sm font-semibold text-gray-600 mb-1">
+                      Thương hiệu
+                    </label>
+                    <p className="text-base text-gray-900 font-medium bg-gray-50 p-3 rounded-lg">
+                      {formData.brand}
+                    </p>
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="text-sm font-semibold text-gray-600 mb-1">
+                      SKU
+                    </label>
+                    <p className="text-base text-gray-900 font-medium bg-gray-50 p-3 rounded-lg">
+                      {formData.sku}
+                    </p>
+                  </div>
+                  <div className="flex flex-col sm:col-span-2">
+                    <label className="text-sm font-semibold text-gray-600 mb-1">
+                      Tags
+                    </label>
+                    <p className="text-base text-gray-900 font-medium bg-gray-50 p-3 rounded-lg">
+                      {formData.tags.join(", ")}
+                    </p>
+                  </div>
+                  <div className="flex flex-col sm:col-span-2">
+                    <label className="text-sm font-semibold text-gray-600 mb-1">
+                      Thumbnail
+                    </label>
+                    <img
+                      src={formData.thumbnail}
+                      alt="Thumbnail"
+                      className="w-48 h-48 object-cover rounded-lg mt-2 shadow-sm"
+                    />
+                  </div>
+                  <div className="flex flex-col sm:col-span-2">
+                    <label className="text-sm font-semibold text-gray-600 mb-1">
+                      Hình ảnh
+                    </label>
+                    <div className="flex flex-wrap gap-3 mt-2">
+                      {formData.images.map((img, index) => (
+                        <img
+                          key={index}
+                          src={img}
+                          alt={`Hình ảnh ${index + 1}`}
+                          className="w-24 h-24 object-cover rounded-lg shadow-sm"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex flex-col sm:col-span-2">
+                    <label className="text-sm font-semibold text-gray-600 mb-1">
+                      Mô tả
+                    </label>
+                    <p className="text-base text-gray-900 font-medium bg-gray-50 p-3 rounded-lg">
+                      {formData.description}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex justify-end mt-8">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setFormData(null)}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all duration-200"
+                  >
+                    Đóng
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <ConfirmationPopup
+        isOpen={productActive}
+        onCancel={() => setProductActive(null)}
+        content={`Bạn có chắc chắn xóa sản phẩm ${productActive?.title}?`}
+        onConfirm={handleDelete}
+      />
     </motion.div>
   );
 };

@@ -16,3 +16,5 @@ export const CATEGORIES = [
     "Samsung",
     "Vivo",
   ];
+
+  export const DEBOUNCE_DELAY = 300;

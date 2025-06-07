@@ -9,7 +9,7 @@ import { UserEvent } from "../types/kafkaTypes";
 import { AuthRequest } from "../types/api";
 import { OAuth2Client } from "google-auth-library";
 import admin from "./firebase";
-import { userLoginValidator, userValidator } from "./validate";
+import { userLoginValidator, userValidator, userValidatorDefault } from "./validate";
 import { z } from "zod";
 import { cacheHelper } from "../redis";
 import bcrypt from 'bcrypt';
@@ -58,6 +58,67 @@ class UserController {
         success: true,
         message: "Tạo người dùng thành công",
         data: record,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ errors: error.errors });
+      }
+      next(error);
+    }
+  }
+
+  async registerByAdmin(req: Request, res: Response, next: NextFunction): Promise<any> {
+    try {
+      const validated = userValidator.parse(req.body);
+
+      const exist = await this.UserModel.findOne({ email: validated.email});
+      
+      if (exist) {
+        return res.status(400).json({ success: false, message: "Người dùng đã tồn tại" });
+      }
+
+      const hashPassword = await bcryptjs.hash(validated.password, 10);
+      validated.password = hashPassword;
+
+      const newUser = new this.UserModel(validated);
+
+      await newUser.save();
+
+      await this.Kafka.publish("User-Topic", { data: newUser }, UserEvent.CREATE);
+
+      const { password: _, ...record } = newUser.toObject();
+
+      res.status(201).json({
+        success: true,
+        message: "Tạo người dùng thành công",
+        data: record,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ errors: error.errors });
+      }
+      next(error);
+    }
+  }
+
+  async deleteUserByAdmin(req: Request, res: Response, next: NextFunction): Promise<any> {
+    try {
+      const id = req.params.id;
+
+      const exist = await this.UserModel.findOne({ _id: id});
+      
+      if (!exist) {
+        return res.status(400).json({ success: false, message: "Người dùng không tồn tại" });
+      }
+
+      const userDelete = await this.UserModel.findByIdAndDelete(id);
+
+      await this.Kafka.publish("User-Topic", { data: userDelete }, UserEvent.DELETE);
+
+      res.status(200).json({
+        success: true,
+        message: "Xóa người dùng thành công",
+        data: userDelete,
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -149,7 +210,7 @@ class UserController {
   async update(req: AuthRequest, res: Response, next: NextFunction) :Promise<any> {
     try {
      
-      const validated = userValidator.parse(req.body);
+      const validated = userValidatorDefault.parse(req.body);
       const userId = req.params?.id 
       if (!userId) {
         return res.status(401).json({ success: false, message: "Không xác thực được người dùng" });
@@ -418,6 +479,30 @@ class UserController {
       message: 'Đổi mât khẩu thành công' });
     } catch (error) {
       console.log("error forgotPassword", error);
+      
+      return res.status(401).json({ 
+        success: false,
+        message: 'Lỗi đổi mật khâu' });
+    }
+  }
+
+  async changePassword(req: Request, res: Response) : Promise<any>{
+    try {
+      const { email, newPassword } = req.body;
+
+    if (!email || !newPassword) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Thiếu thông tin email hoặc mật khẩu'});
+    }
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.UserModel.updateOne({ email }, { password: hashedPassword });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Đổi mât khẩu thành công' });
+    } catch (error) {
+      console.log("error changePassword", error);
       
       return res.status(401).json({ 
         success: false,

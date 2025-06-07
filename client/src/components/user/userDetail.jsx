@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { FaEdit, FaLock } from 'react-icons/fa';
 import { motion } from 'framer-motion';
-import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useAuth } from '../../context/authContext';
+import apiClient from '../helper/axios';
+import { useToast } from '../../context/toastContext';
 
 const UserDetail = () => {
   const {user} = useAuth();
+  const { showToast } = useToast();
   
   const [form, setForm] = useState({
     name: user.name,
@@ -23,10 +25,13 @@ const UserDetail = () => {
   const handleSave = async () => {
     try {
       // Fake PUT API call
-      // await api.put(`/api/users/${user._id}`, form);
-      toast.success('Cập nhật thông tin thành công!');
+     const res= await apiClient.put(`/api/user-service/${user._id}`, form);
+     console.log("res:::", res.data?.data.success, res.data.success);
+     if(res.data.success){
+      showToast(res?.data.message);
+     }
     } catch (err) {
-      toast.error('Có lỗi xảy ra khi cập nhật.');
+      showToast(err?.data.message || "Có lỗi xảy ra khi cập nhật" , "error");
     }
   };
 
@@ -38,20 +43,34 @@ const UserDetail = () => {
     const confirmPassword = formData.get('confirmPassword');
 
     if (newPassword !== confirmPassword) {
-      toast.error('Mật khẩu xác nhận không khớp.');
+      showToast('Mật khẩu xác nhận không khớp.', "error");
+      return;
+    }
+
+    if (newPassword === oldPassword) {
+      showToast('Mật khẩu mới không được trùng với mật khẩu mới.', "error");
       return;
     }
 
     try {
       // Fake API call
-      // await api.post(`/api/users/${user._id}/change-password`, { oldPassword, newPassword });
-      toast.success('Đổi mật khẩu thành công!');
-      setShowPasswordModal(false);
+      const res= await apiClient.post(`/api/user-service/change-password`, {
+        email : form.email,
+        newPassword 
+      });
+     console.log("res:::", res.data?.data.success, res.data.success);
+     if(res.data.success){
+      showToast(res?.data.message);
+     }
     } catch (err) {
-      toast.error('Đổi mật khẩu thất bại.');
+      showToast(err?.data.message || 'Đổi mật khẩu thất bại', 'error');
+    }finally{
+      setShowPasswordModal(false);
     }
   };
 
+  console.log("form::", form);
+  
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <h2 className="text-2xl font-bold mb-6">Chi tiết người dùng</h2>

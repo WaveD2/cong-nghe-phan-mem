@@ -113,7 +113,7 @@ export default function Nav() {
                                 {isAuthenticated ? (
                                     <>
                                         <img
-                                            src={user.avatar || 'https://via.placeholder.com/32'}
+                                            src={user.avatar}
                                             alt="User Avatar"
                                             className="w-8 h-8 rounded-full object-cover"
                                         />
@@ -160,6 +160,19 @@ export default function Nav() {
                                                     <User className="w-4 h-4 mr-2" />
                                                     Thông tin cá nhân
                                                 </NavLink>
+
+                                                <NavLink
+                                                    to={`/orders`}
+                                                    className="flex items-center px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-600"
+                                                    onClick={() => {
+                                                        console.log("user::", user);
+                                                        setIsUserMenuOpen(false)
+                                                    }}
+                                                >
+                                                    <User className="w-4 h-4 mr-2" />
+                                                    Đơn hàng
+                                                </NavLink>
+                                                
                                                 <NavLink
                                                     to="/"
                                                     className="flex items-center px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-600"
@@ -250,7 +263,7 @@ export default function Nav() {
                                     <div className="space-y-1">
                                         <div className="flex items-center px-4 py-2">
                                             <img
-                                                src={user.avatar || 'https://via.placeholder.com/32'}
+                                                src={user.avatar}
                                                 alt="User Avatar"
                                                 className="w-8 h-8 rounded-full object-cover mr-2"
                                             />

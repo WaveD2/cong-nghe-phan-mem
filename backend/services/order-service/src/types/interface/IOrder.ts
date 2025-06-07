@@ -6,7 +6,7 @@ export interface IOrderItem {
   name: string;
   quantity: number;
   price: number;
-  status: "Pending" | "Shipped" | "Delivered" | "Cancelled" | "Completed"; 
+  status: "pending" | "shipped" | "delivered" | "cancelled"| "completed";
 }
 
 export interface IAddress {
@@ -21,8 +21,8 @@ export interface IOrder extends Document {
   items: IOrderItem[];
   shippingAddress: IAddress;
   totalAmount: number;
-  status: "Pending" | "Shipped" | "Delivered" | "Cancelled"| "Completed";
-  paymentMethod: string;
+  status: "pending" | "shipped" | "delivered" | "cancelled"| "completed";
+  paymentMethod:  'cod'| 'momo'| 'zalopay'| 'vnpay'| 'paypal'| 'stripe'| 'bank_transfer'| 'credit_card';
   isPaid: boolean;
   isDelivered: boolean;
     orderDate?: Date;

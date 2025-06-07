@@ -10,8 +10,8 @@ import Error404 from "./pages/Error404";
 import ProductProvider from "./context/productContext";
 import Layout from "./Layout";
 import ProductDetails from "./components/products/productDetailsIndividual/productDetails";
-import CartPage from "./components/products/productDetailsIndividual/CartPage";
-import CheckoutPage from "./components/products/productDetailsIndividual/checkoutpage";
+import CartPage from "./components/cart/CartPage";
+import CheckoutPage from "./components/order/checkoutpage";
 import ContactForm from "./pages/contact";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/adminDashboard";
@@ -29,6 +29,8 @@ import CustomerLayout from "./pages/client/customerLayout";
 import CustomerOrder from "./pages/client/customerOrder";
 import ForgotPassword from "./components/auth/forgotPassword";
 import UserDetail from "./components/user/userDetail";
+import OrderHistoryPage from "./components/order/orderPage";
+import OrderDetailPage from "./components/order/orderDetailPage";
 
 function App() {
   return (
@@ -109,6 +111,9 @@ function App() {
                   <Route path="/user/:id" element={<UserDetail />} />
                   <Route path="/cart" element={<CartPage />} />
                   <Route path="/checkout" element={<CheckoutPage />} />
+                  <Route path="/orders" element={<OrderHistoryPage />} />
+                  <Route path="/order/:id" element={<OrderDetailPage />} />
+
                 </Route>
 
                 <Route path="*" element={<Error404 />} />

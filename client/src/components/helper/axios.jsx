@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL: "http://localhost:80",
-  // baseURL:import.meta.env.VITE_API_URL,
+  // baseURL: "http://localhost:80",
+  baseURL:import.meta.env.VITE_API_URL,
     // baseURL: "https://store-one-henna.vercel.app/api",
   timeout: 40000,
   headers: {
