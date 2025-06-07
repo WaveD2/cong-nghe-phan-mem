@@ -19,15 +19,12 @@ apiClient.interceptors.response.use(
   async (error) => {
     const config = error.config;
     
-    // Initialize retry count if not set
     config._retryCount = config._retryCount || 0;
     
-    // Check if we've exceeded max retries or if it's a non-401 error
     if (config._retryCount >= 2 || (error.response?.status !== 401)) {
       return Promise.reject(error);
     }
 
-    // Handle 401 errors
     if (error.response?.status === 401 && !config._retry) {
       config._retry = true;
 
@@ -51,7 +48,7 @@ apiClient.interceptors.response.use(
     }
 
     config._retryCount++;
-    const backoffDelay = Math.pow(2, config._retryCount) * 1000; // 1s, 2s for retries
+    const backoffDelay = Math.pow(2, config._retryCount) * 1000;
     
     try {
       await delay(backoffDelay);
