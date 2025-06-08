@@ -28,7 +28,7 @@ const CartPage = () => {
   // Xóa sản phẩm khỏi giỏ hàng
   const handleRemoveItem = async (productId) => {
     try {
-      await apiClient.put("/api/cart-service", { productId });
+      await apiClient.delete(`/api/cart-service/item/${productId}`);
       setCart((prev) => ({
         ...prev,
         items: prev.items.filter((item) => item.productId._id !== productId),
@@ -42,7 +42,7 @@ const CartPage = () => {
   // Cập nhật số lượng sản phẩm
   const handleUpdateQuantity = async (productId, newQuantity) => {
     try {
-      await apiClient.put("/api/cart-service", { productId, quantity: newQuantity });
+      await apiClient.put("/api/cart-service/quantity", { id: productId, quantity: newQuantity });
       setCart((prev) => ({
         ...prev,
         items: prev.items.map((item) =>
@@ -120,7 +120,7 @@ const CartPage = () => {
                         {item.productId.description.substring(0, 100)}...
                       </p>
                       <p className="text-lg font-bold text-blue-400 mt-2">
-                        {(item.productId.discountedPrice * item.quantity).toLocaleString(
+                        {(item.productId.discountedPrice).toLocaleString(
                           "vi-VN"
                         )}{" "}
                         VND

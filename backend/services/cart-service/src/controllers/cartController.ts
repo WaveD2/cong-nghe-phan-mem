@@ -143,7 +143,7 @@ class CartController {
 
   async removeCart(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const { id } = req.body;
+      const { id } = req.params;
       const objectId = this.validateObjectId(id, res);
       if (!objectId) return;
 

@@ -20,10 +20,21 @@ const PORT = process.env.PORT || 7002;
 const apiRoot = process.env.API_ROOT || "/api/product-service";
 const DOMAIN = process.env.DOMAIN || "http://localhost:7002";
 
-// Enable CORS
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:514',
+  'https://cnpm-gamma.vercel.app'
+];
+
 app.use(cors({
-  origin: 'http://localhost:5173',
-  credentials: true,
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Không cho phép CORS từ origin này: ' + origin));
+    }
+  },
+  credentials: true
 }));
 
 // Serve static files from the uploads directory

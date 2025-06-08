@@ -41,7 +41,8 @@ const Register = () => {
 
     setIsLoading(true);
     try {
-      const res = await register(name, email, password, phone);
+      //name, email, password, role,phone ,isActive ,avatar
+      const res = await register({name, email, password, phone, isActive: true, role: "user" });
 
       console.log("Registration successful", res.data.success);
       if (res.data.success) {

@@ -62,9 +62,29 @@ export const AuthProvider = ({ children }) => {
   }, [navigate, location.pathname]);
 
   // Register function
-  const register = async ({name, email, password, role,phone ,isActive ,avatar }) => {
+  const registerAdmin = async ({name, email, password, role,phone ,isActive ,avatar }) => {
     try {
       const res = await apiClient.post('/api/user-service/admin-create', {
+        name,
+        email,
+        password,
+        phone,
+        avatar,
+        isActive,
+        role
+      }, {
+        withCredentials: true
+      });
+      return res;
+    } catch (err) {
+      console.error('Register error:', err);
+      throw err;
+    }
+  };
+
+  const register = async ({name, email, password, role,phone ,isActive ,avatar }) => {
+    try {
+      const res = await apiClient.post('/api/user-service/register', {
         name,
         email,
         password,
@@ -92,7 +112,7 @@ export const AuthProvider = ({ children }) => {
         withCredentials: true
       });
       if (res.data.success) {
-        setUser(res.data);
+        setUser(res.data.data);
         setIsAuthenticated(true);
       }
       return res;
@@ -255,6 +275,7 @@ export const AuthProvider = ({ children }) => {
       isLoading,
       login,
       register,
+      registerAdmin,
       logout,
       requestForgotPassword,
       confirmForgotPassword,

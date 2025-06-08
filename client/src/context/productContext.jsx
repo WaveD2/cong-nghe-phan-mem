@@ -2,6 +2,7 @@ import { createContext, useState, useEffect, useContext, useCallback, useRef, us
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import apiClient from '../components/helper/axios';
 import { useToast } from './toastContext';
+import { useScrollToTop } from '../hooks/useScrollToTop';
 
 const ProductContext = createContext();
 
@@ -84,6 +85,8 @@ export const useProducts = () => {
 };
 
 const ProductProvider = ({ children }) => {
+  useScrollToTop();
+
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();

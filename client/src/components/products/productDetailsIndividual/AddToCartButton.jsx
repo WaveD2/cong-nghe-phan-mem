@@ -15,7 +15,7 @@ const AddToCartButton = ({ productId, onAddToCart }) => {
     setIsAdding(true)
     try {
       console.log("productId", productId)
-      const response = await apiClient.post('/cart', { productId, quantity })
+      const response = await apiClient.post('/api/cart-service', { id: productId, quantity })
       console.log(response.data)
       showToast(response.data.message, "success")
     } catch (error) {

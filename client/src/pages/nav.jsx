@@ -263,7 +263,7 @@ export default function Nav() {
                                     <div className="space-y-1">
                                         <div className="flex items-center px-4 py-2">
                                             <img
-                                                src={user.avatar}
+                                                src={user?.avatar ||"https://images.pexels.com/photos/13288544/pexels-photo-13288544.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"}
                                                 alt="User Avatar"
                                                 className="w-8 h-8 rounded-full object-cover mr-2"
                                             />

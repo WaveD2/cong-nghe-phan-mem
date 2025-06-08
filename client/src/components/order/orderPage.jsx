@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaEye, FaTimes } from "react-icons/fa";
+import { FaEye, FaShoppingCart, FaTimes } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import apiClient from "../helper/axios";
 import { useToast } from "../../context/toastContext";
@@ -17,7 +17,7 @@ const OrderHistoryPage = () => {
         const response = await apiClient.get("/api/order-service");
         setOrders(response.data.data);
       } catch (error) {
-        showToast("Không thể tải danh sách đơn hàng", "error");
+        showToast(error.data.message || "Không thể tải danh sách đơn hàng", "error");
       } finally {
         setLoading(false);
       }

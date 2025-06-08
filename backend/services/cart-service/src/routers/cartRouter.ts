@@ -12,7 +12,7 @@ cartRouter.get("/:id", cartController.get.bind(cartController));
 
 cartRouter.put("/quantity", cartController.updateCartItemQuantity.bind(cartController));
 
-cartRouter.delete("/item", cartController.removeCart.bind(cartController));
+cartRouter.delete("/item/:id", cartController.removeCart.bind(cartController));
 
 cartRouter.delete("/", cartController.clearCart.bind(cartController));
 

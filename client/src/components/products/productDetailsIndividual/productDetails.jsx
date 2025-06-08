@@ -47,7 +47,7 @@ const ProductDetails = () => {
           </div>
   
           {/* Product Info Section */}
-          <div className="flex flex-col justify-between">
+          <div className="flex flex-col gap-y-10">
             <div>
               <h1 className="text-3xl font-bold text-gray-800 mb-2">
                 {product.title}

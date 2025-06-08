@@ -14,10 +14,23 @@ const app = express();
 const PORT = process.env.PORT || 7001;
 const apiRoot = process.env.API_ROOT || "/api/user-service";
 
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:514',
+  'https://cnpm-gamma.vercel.app'
+];
+
 app.use(cors({
-  origin: 'http://localhost:5173', // chỉ định origin cụ thể
-  credentials: true, 
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Không cho phép CORS từ origin này: ' + origin));
+    }
+  },
+  credentials: true
 }));
+
 setupMail();;
 connectRedis();
 app.use(express.json());

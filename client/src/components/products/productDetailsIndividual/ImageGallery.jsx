@@ -30,7 +30,7 @@ const ImageGallery = ({ images }) => {
       </div>
 
       {/* Main Image */}
-      <div className="order-1 lg:order-2 w-full max-w-[600px]">
+      <div className="order-1 lg:order-2 w-full max-w-[550px]">
         <img
           src={validImages[selectedImage] || "/placeholder.png"}
           alt="Selected product"

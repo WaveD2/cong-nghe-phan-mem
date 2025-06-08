@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Select from 'react-select';
 import { useProducts } from '../../context/productContext';
 import { debounce } from '../../hepler';
@@ -16,19 +16,21 @@ const Store = () => {
     resetFilters,
     clearError 
   } = useProducts();
+  const [viewMode, setViewMode] = useState('grid');
+  const navigate = useNavigate(); 
   const location = useLocation();
-   const [viewMode, setViewMode] = useState('grid');
 
-   const updateParam = useCallback(
+  const updateParam = useCallback(
     (key, value) => {
-      const newParams = new URLSearchParams(location.search);
+      const newParams = new URLSearchParams(location.search);  
       if (value != null && value !== '') {
-        newParams.set(key, value);
+        newParams.set(key, value);  
       } else {
-        newParams.delete(key);
+        newParams.delete(key);  
       }
+      navigate(`${location.pathname}?${newParams.toString()}`, { replace: true });
     },
-    [location.search]
+    [location.search, navigate] 
   );
 
   // Debounced update for title param

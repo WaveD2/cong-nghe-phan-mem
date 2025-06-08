@@ -105,7 +105,7 @@ const Home = () => {
         transition={{ duration: 0.8 }}
         className="bg-gray-100 py-12"
       >
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-8">
           <h2 className="text-3xl font-bold text-center mb-8">Danh mục sản phẩm</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {CATEGORIES.map(({ label, value }) => (
@@ -133,7 +133,7 @@ const Home = () => {
             transition={{ duration: 0.5 }}
             className="bg-gray-50 py-12"
           >
-            <div className="container mx-auto px-4">
+            <div className="container mx-auto px-8">
               <h2 className="text-3xl font-bold text-center mb-8">
                 {CATEGORIES.find((c) => c.value === category)?.label}
               </h2>
