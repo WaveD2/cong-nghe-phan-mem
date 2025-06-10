@@ -172,10 +172,14 @@ class UserController {
         .cookie("refreshToken", refreshToken, {
           httpOnly: true,
           maxAge: 30 * 24 * 60 * 60 * 1000,
+          sameSite: "none",
+          secure: true
         })
         .cookie("accessToken", accessToken, {
           httpOnly: true,
           maxAge: 24 * 60 * 60 * 1000,
+          sameSite: "none",
+          secure: true
         })
         .json({
           success: true,
@@ -317,7 +321,7 @@ class UserController {
         data: user
       });
     } catch (err) {
-      res.status(401).json({ success: false, message: "Xác thực Google thất bại" });
+      res.status(400).json({ success: false, message: "Xác thực Google thất bại" });
     }
   }
 
@@ -401,7 +405,7 @@ class UserController {
    } catch (error) {
     console.log("error requestForgotPasswordOTP", error);
     
-    return res.status(401).json({ 
+    return res.status(400).json({ 
       success: false,
       message: 'Lỗi gửi OTP' });
    }
@@ -442,7 +446,7 @@ class UserController {
     } catch (error) {
       console.log("error confirmForgotPasswordOTP", error);
     
-    return res.status(401).json({ 
+    return res.status(400).json({ 
       success: false,
       message: 'Lỗi xác thức OTP ' });
      }
@@ -480,7 +484,7 @@ class UserController {
     } catch (error) {
       console.log("error forgotPassword", error);
       
-      return res.status(401).json({ 
+      return res.status(400).json({ 
         success: false,
         message: 'Lỗi đổi mật khâu' });
     }
@@ -504,7 +508,7 @@ class UserController {
     } catch (error) {
       console.log("error changePassword", error);
       
-      return res.status(401).json({ 
+      return res.status(400).json({ 
         success: false,
         message: 'Lỗi đổi mật khâu' });
     }

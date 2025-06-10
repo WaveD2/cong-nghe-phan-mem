@@ -23,7 +23,10 @@ const DOMAIN = process.env.DOMAIN || "http://localhost:7002";
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:514',
-  'https://cnpm-gamma.vercel.app'
+  'https://cnpm-gamma.vercel.app',
+  'https://cnpm-waved2s-projects.vercel.app',
+  'https://cnpm-waved2s-projects.vercel.app/',
+  'https://cnpm-gamma.vercel.app/'
 ];
 
 app.use(cors({
@@ -36,12 +39,9 @@ app.use(cors({
   },
   credentials: true
 }));
-
-// Serve static files from the uploads directory
 const uploadDir = path.join(process.cwd(), 'Uploads');
 app.use('/uploads', express.static(uploadDir));
 
-// Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'Uploads/');
@@ -106,7 +106,7 @@ app.use(errorHandler);
 
 // Seed products
 (async () => {
-  await seedProduct();
+  // await seedProduct();
 })();
 
 // Global error handlers

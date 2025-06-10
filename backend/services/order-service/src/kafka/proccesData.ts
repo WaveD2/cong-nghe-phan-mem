@@ -70,7 +70,7 @@ const upsertDocument = async <T>(id: string | ObjectId, data: Partial<T>, model:
 const insertManyDocument = async <T>(data: Partial<T>, model: Model<T>): Promise<void> => {
   try {
     const records = await model.insertMany(data);
-    console.log(`[insertManyDocument] ${model.modelName}`);
+    console.log(`[insertManyDocument] ${model.modelName} ${JSON.stringify(records , null, 2)}`);
   } catch (error) {
     console.error(`[insertManyDocument] ${model.modelName} error`, (error as Error).message);
   }

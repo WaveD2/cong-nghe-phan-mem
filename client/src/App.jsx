@@ -19,7 +19,7 @@ import ManageProducts from "./pages/admin/manageProducts";
 import ManageUsers from "./pages/admin/manageUsers";
 import ManageProductIndividual from "./pages/admin/manageProductIndividual";
 import ManageUserIndividual from "./pages/admin/manageUsersIndividual";
-import ManageOrder from "./pages/admin/manageOrder";
+import ManageOrders from "./pages/admin/manageOrder";
 import ManageOrderUpdate from "./pages/admin/manageOrderUpdate";
 import { ToastProvider } from "./context/toastContext";
 import Logout from "./components/auth/logout";
@@ -73,7 +73,7 @@ function App() {
                         path="users/:id"
                         element={<ManageUserIndividual />}
                       />
-                      <Route path="orders" element={<ManageOrder />} />
+                      <Route path="orders" element={<ManageOrders />} />
                       <Route
                         path="orders/:id"
                         element={<ManageOrderUpdate />}

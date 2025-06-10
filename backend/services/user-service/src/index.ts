@@ -17,8 +17,12 @@ const apiRoot = process.env.API_ROOT || "/api/user-service";
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:514',
-  'https://cnpm-gamma.vercel.app'
+  'https://cnpm-gamma.vercel.app',
+  'https://cnpm-waved2s-projects.vercel.app',
+  'https://cnpm-waved2s-projects.vercel.app/',
+  'https://cnpm-gamma.vercel.app/'
 ];
+
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -28,7 +32,7 @@ app.use(cors({
       callback(new Error('Không cho phép CORS từ origin này: ' + origin));
     }
   },
-  credentials: true
+  credentials: true,
 }));
 
 setupMail();;

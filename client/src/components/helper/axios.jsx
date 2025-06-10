@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL: 'http://localhost:80',
+  baseURL: import.meta.env.VITE_API_URL,
   timeout: 40000,
   headers: {
     "ngrok-skip-browser-warning": true,
@@ -12,54 +12,53 @@ const apiClient = axios.create({
 let isRefreshing = false;
 let refreshPromise = null;
 
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const pendingRequests = new Map();
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Remove request from pending list on success
+    const requestKey = `${response.config.method}:${response.config.url}`;
+    pendingRequests.delete(requestKey);
+    return response;
+  },
   async (error) => {
     const config = error.config;
 
-    // Khởi tạo _retryCount nếu chưa có
-    config._retryCount = config._retryCount || 0;
+    config._retry = config._retry || false;
 
-    // Nếu đã thử 3 lần, từ chối ngay lập tức
-    if (config._retryCount >= 1) {
-      return Promise.reject(error);
-    }
-
-    // Tăng số lần thử
-    config._retryCount++;
-
-    // Xử lý lỗi 401 (refresh token)
     if (error.response?.status === 401 && !config._retry) {
       config._retry = true;
 
-      if (!isRefreshing) {
-        isRefreshing = true;
-        refreshPromise = apiClient.post("/api/user-service/refreshToken", {}, { withCredentials: true })
-          .finally(() => {
-            isRefreshing = false;
-            refreshPromise = null;
-          });
+      const requestKey = `${config.method}:${config.url}`;
+      
+      if (pendingRequests.has(requestKey)) {
+        return Promise.reject(new Error("Request already in progress"));
       }
 
+      pendingRequests.set(requestKey, true);
+
       try {
+        if (!isRefreshing) {
+          isRefreshing = true;
+          refreshPromise = apiClient
+            .post("/api/user-service/refreshToken", {}, { withCredentials: true })
+            .finally(() => {
+              isRefreshing = false;
+              refreshPromise = null;
+            });
+        }
+
         await refreshPromise;
-        return apiClient(config);
+        const response = await apiClient(config);
+        pendingRequests.delete(requestKey);
+        return response;
       } catch (refreshError) {
+        pendingRequests.delete(requestKey);
         return Promise.reject(refreshError);
       }
     }
 
-    // Xử lý các lỗi khác với cơ chế backoff
-    const backoffDelay = Math.pow(2, config._retryCount) * 1000;
-
-    try {
-      await delay(backoffDelay);
-      return apiClient(config);
-    } catch (retryError) {
-      return Promise.reject(retryError);
-    }
+    return Promise.reject(error);
   }
 );
 

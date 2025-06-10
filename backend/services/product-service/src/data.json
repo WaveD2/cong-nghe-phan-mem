@@ -1,0 +1,632 @@
+[
+    {
+        "discount": 0,
+        "title": "Apple MacBook Pro 14 Inch Space Grey",
+        "description": "The MacBook Pro 14 Inch in Space Grey is a powerful and sleek laptop, featuring Apple's M1 Pro chip for exceptional performance and a stunning Retina display.",
+        "category": "laptops",
+        "price": 20000000,
+        "stock": 50,
+        "tags": [
+            "laptops",
+            "apple"
+        ],
+        "brand": "Apple",
+        "sku": "QDKO6NRJ",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/laptops/Apple%20MacBook%20Pro%2014%20Inch%20Space%20Grey/1.png",
+            "https://cdn.dummyjson.com/products/images/laptops/Apple%20MacBook%20Pro%2014%20Inch%20Space%20Grey/2.png",
+            "https://cdn.dummyjson.com/products/images/laptops/Apple%20MacBook%20Pro%2014%20Inch%20Space%20Grey/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/laptops/Apple%20MacBook%20Pro%2014%20Inch%20Space%20Grey/thumbnail.png",
+        "discountedPrice": 20000000
+    },
+    {
+        "discount": 0,
+        "title": "Asus Zenbook Pro Dual Screen Laptop",
+        "description": "The Asus Zenbook Pro Dual Screen Laptop is a high-performance device with dual screens, providing productivity and versatility for creative professionals.",
+        "category": "laptops",
+        "price": 21500000,
+        "stock": 38,
+        "tags": [
+            "laptops"
+        ],
+        "brand": "Asus",
+        "sku": "4A9KFMBG",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/laptops/Asus%20Zenbook%20Pro%20Dual%20Screen%20Laptop/1.png",
+            "https://cdn.dummyjson.com/products/images/laptops/Asus%20Zenbook%20Pro%20Dual%20Screen%20Laptop/2.png",
+            "https://cdn.dummyjson.com/products/images/laptops/Asus%20Zenbook%20Pro%20Dual%20Screen%20Laptop/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/laptops/Asus%20Zenbook%20Pro%20Dual%20Screen%20Laptop/thumbnail.png",
+        "discountedPrice": 21500000
+    },
+    {
+        "discount": 0,
+        "title": "Huawei Matebook X Pro",
+        "description": "The Huawei Matebook X Pro is a slim and stylish laptop with a high-resolution touchscreen display, offering a premium experience for users on the go.",
+        "category": "laptops",
+        "price": 18000000,
+        "stock": 34,
+        "tags": [
+            "laptops"
+        ],
+        "brand": "Huawei",
+        "sku": "U2CBNNB0",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/laptops/Huawei%20Matebook%20X%20Pro/1.png",
+            "https://cdn.dummyjson.com/products/images/laptops/Huawei%20Matebook%20X%20Pro/2.png",
+            "https://cdn.dummyjson.com/products/images/laptops/Huawei%20Matebook%20X%20Pro/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/laptops/Huawei%20Matebook%20X%20Pro/thumbnail.png",
+        "discountedPrice": 18000000
+    },
+    {
+        "discount": 0,
+        "title": "Lenovo Yoga 920",
+        "description": "The Lenovo Yoga 920 is a 2-in-1 convertible laptop with a flexible hinge, allowing you to use it as a laptop or tablet, offering versatility and portability.",
+        "category": "laptops",
+        "price": 19600000,
+        "stock": 71,
+        "tags": [
+            "laptops"
+        ],
+        "brand": "Lenovo",
+        "sku": "MST9WZQY",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/laptops/Lenovo%20Yoga%20920/1.png",
+            "https://cdn.dummyjson.com/products/images/laptops/Lenovo%20Yoga%20920/2.png",
+            "https://cdn.dummyjson.com/products/images/laptops/Lenovo%20Yoga%20920/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/laptops/Lenovo%20Yoga%20920/thumbnail.png",
+        "discountedPrice": 19600000
+    },
+    {
+        "discount": 0,
+        "title": "New DELL XPS 13 9300 Laptop",
+        "description": "The New DELL XPS 13 9300 Laptop is a compact and powerful device, featuring a virtually borderless InfinityEdge display and high-end performance for various tasks.",
+        "category": "laptops",
+        "price": 19600000,
+        "stock": 18,
+        "tags": [
+            "laptops"
+        ],
+        "brand": "Dell",
+        "sku": "XBJJ446X",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/laptops/New%20DELL%20XPS%2013%209300%20Laptop/1.png",
+            "https://cdn.dummyjson.com/products/images/laptops/New%20DELL%20XPS%2013%209300%20Laptop/2.png",
+            "https://cdn.dummyjson.com/products/images/laptops/New%20DELL%20XPS%2013%209300%20Laptop/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/laptops/New%20DELL%20XPS%2013%209300%20Laptop/thumbnail.png",
+        "discountedPrice": 19600000
+    },
+    {
+        "discount": 0,
+        "title": "Brown Leather Belt Watch",
+        "description": "The Brown Leather Belt Watch is a stylish timepiece with a classic design. Featuring a genuine leather strap and a sleek dial, it adds a touch of sophistication to your look.",
+        "category": "mens-watches",
+        "price": 29100000,
+        "stock": 69,
+        "tags": [
+            "watches",
+            "leather watches"
+        ],
+        "brand": "Fashion Timepieces",
+        "sku": "WGZ21MSA",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/mens-watches/Brown%20Leather%20Belt%20Watch/1.png",
+            "https://cdn.dummyjson.com/products/images/mens-watches/Brown%20Leather%20Belt%20Watch/2.png",
+            "https://cdn.dummyjson.com/products/images/mens-watches/Brown%20Leather%20Belt%20Watch/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/mens-watches/Brown%20Leather%20Belt%20Watch/thumbnail.png",
+        "discountedPrice": 29100000
+    },
+    {
+        "discount": 0,
+        "title": "Longines Master Collection",
+        "description": "The Longines Master Collection is an elegant and refined watch known for its precision and craftsmanship. With a timeless design, it's a symbol of luxury and sophistication.",
+        "category": "mens-watches",
+        "price": 120000,
+        "stock": 65,
+        "tags": [
+            "watches",
+            "luxury watches"
+        ],
+        "brand": "Longines",
+        "sku": "LA7B9XEV",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/mens-watches/Longines%20Master%20Collection/1.png",
+            "https://cdn.dummyjson.com/products/images/mens-watches/Longines%20Master%20Collection/2.png",
+            "https://cdn.dummyjson.com/products/images/mens-watches/Longines%20Master%20Collection/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/mens-watches/Longines%20Master%20Collection/thumbnail.png",
+        "discountedPrice": 120000
+    },
+    {
+        "discount": 0,
+        "title": "Rolex Cellini Date Black Dial",
+        "description": "The Rolex Cellini Date with Black Dial is a classic and prestigious watch. With a black dial and date complication, it exudes sophistication and is a symbol of Rolex's heritage.",
+        "category": "mens-watches",
+        "price": 210000,
+        "stock": 84,
+        "tags": [
+            "watches",
+            "luxury watches"
+        ],
+        "brand": "Rolex",
+        "sku": "J3GPKQW0",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/mens-watches/Rolex%20Cellini%20Date%20Black%20Dial/1.png",
+            "https://cdn.dummyjson.com/products/images/mens-watches/Rolex%20Cellini%20Date%20Black%20Dial/2.png",
+            "https://cdn.dummyjson.com/products/images/mens-watches/Rolex%20Cellini%20Date%20Black%20Dial/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/mens-watches/Rolex%20Cellini%20Date%20Black%20Dial/thumbnail.png",
+        "discountedPrice": 210000
+    },
+    {
+        "discount": 0,
+        "title": "Rolex Cellini Moonphase",
+        "description": "The Rolex Cellini Moonphase is a masterpiece of horology, featuring a moon phase complication and exquisite design. It reflects Rolex's commitment to precision and elegance.",
+        "category": "mens-watches",
+        "price": 300000,
+        "stock": 33,
+        "tags": [
+            "watches",
+            "luxury watches"
+        ],
+        "brand": "Rolex",
+        "sku": "LUZDIKKR",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/mens-watches/Rolex%20Cellini%20Moonphase/1.png",
+            "https://cdn.dummyjson.com/products/images/mens-watches/Rolex%20Cellini%20Moonphase/2.png",
+            "https://cdn.dummyjson.com/products/images/mens-watches/Rolex%20Cellini%20Moonphase/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/mens-watches/Rolex%20Cellini%20Moonphase/thumbnail.png",
+        "discountedPrice": 300000
+    },
+    {
+        "discount": 0,
+        "title": "Rolex Datejust",
+        "description": "The Rolex Datejust is an iconic and versatile timepiece with a date window. Known for its timeless design and reliability, it's a symbol of Rolex's watchmaking excellence.",
+        "category": "mens-watches",
+        "price": 400000,
+        "stock": 11,
+        "tags": [
+            "watches",
+            "luxury watches"
+        ],
+        "brand": "Rolex",
+        "sku": "86V20NWJ",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/mens-watches/Rolex%20Datejust/1.png",
+            "https://cdn.dummyjson.com/products/images/mens-watches/Rolex%20Datejust/2.png",
+            "https://cdn.dummyjson.com/products/images/mens-watches/Rolex%20Datejust/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/mens-watches/Rolex%20Datejust/thumbnail.png",
+        "discountedPrice": 400000
+    },
+    {
+        "discount": 0,
+        "title": "Rolex Submariner Watch",
+        "description": "The Rolex Submariner is a legendary dive watch with a rich history. Known for its durability and water resistance, it's a symbol of adventure and exploration.",
+        "category": "mens-watches",
+        "price": 300000,
+        "stock": 35,
+        "tags": [
+            "watches",
+            "luxury watches"
+        ],
+        "brand": "Rolex",
+        "sku": "XFGRO0O5",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/mens-watches/Rolex%20Submariner%20Watch/1.png",
+            "https://cdn.dummyjson.com/products/images/mens-watches/Rolex%20Submariner%20Watch/2.png",
+            "https://cdn.dummyjson.com/products/images/mens-watches/Rolex%20Submariner%20Watch/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/mens-watches/Rolex%20Submariner%20Watch/thumbnail.png",
+        "discountedPrice": 300000
+    },
+    {
+        "discount": 0,
+        "title": "iPhone 5s",
+        "description": "The iPhone 5s is a classic smartphone known for its compact design and advanced features during its release. While it's an older model, it still provides a reliable user experience.",
+        "category": "smartphones",
+        "price": 5000000,
+        "stock": 65,
+        "tags": [
+            "smartphones",
+            "apple"
+        ],
+        "brand": "Apple",
+        "sku": "AZ1L68SM",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/smartphones/iPhone%205s/1.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/iPhone%205s/2.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/iPhone%205s/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/smartphones/iPhone%205s/thumbnail.png",
+        "discountedPrice": 5000000
+    },
+    {
+        "discount": 0,
+        "title": "iPhone 6",
+        "description": "The iPhone 6 is a stylish and capable smartphone with a larger display and improved performance. It introduced new features and design elements, making it a popular choice in its time.",
+        "category": "smartphones",
+        "price": 8000000,
+        "stock": 99,
+        "tags": [
+            "smartphones",
+            "apple"
+        ],
+        "brand": "Apple",
+        "sku": "ZPXH3X9J",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/smartphones/iPhone%206/1.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/iPhone%206/2.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/iPhone%206/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/smartphones/iPhone%206/thumbnail.png",
+        "discountedPrice": 8000000
+    },
+    {
+        "discount": 0,
+        "title": "iPhone 13 Pro",
+        "description": "The iPhone 13 Pro is a cutting-edge smartphone with a powerful camera system, high-performance chip, and stunning display. It offers advanced features for users who demand top-notch technology.",
+        "category": "smartphones",
+        "price": 15000000,
+        "stock": 26,
+        "tags": [
+            "smartphones",
+            "apple"
+        ],
+        "brand": "Apple",
+        "sku": "YGQKHPGK",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/smartphones/iPhone%2013%20Pro/1.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/iPhone%2013%20Pro/2.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/iPhone%2013%20Pro/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/smartphones/iPhone%2013%20Pro/thumbnail.png",
+        "discountedPrice": 15000000
+    },
+    {
+        "discount": 0,
+        "title": "iPhone X",
+        "description": "The iPhone X is a flagship smartphone featuring a bezel-less OLED display, facial recognition technology (Face ID), and impressive performance. It represents a milestone in iPhone design and innovation.",
+        "category": "smartphones",
+        "price": 12000000,
+        "stock": 99,
+        "tags": [
+            "smartphones",
+            "apple"
+        ],
+        "brand": "Apple",
+        "sku": "9QN3UDUD",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/smartphones/iPhone%20X/1.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/iPhone%20X/2.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/iPhone%20X/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/smartphones/iPhone%20X/thumbnail.png",
+        "discountedPrice": 12000000
+    },
+    {
+        "discount": 0,
+        "title": "Oppo A57",
+        "description": "The Oppo A57 is a mid-range smartphone known for its sleek design and capable features. It offers a balance of performance and affordability, making it a popular choice.",
+        "category": "smartphones",
+        "price": 2000000,
+        "stock": 76,
+        "tags": [
+            "smartphones",
+            "oppo"
+        ],
+        "brand": "Oppo",
+        "sku": "J1NO9ULG",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/smartphones/Oppo%20A57/1.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/Oppo%20A57/2.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/Oppo%20A57/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/smartphones/Oppo%20A57/thumbnail.png",
+        "discountedPrice": 2000000
+    },
+    {
+        "discount": 0,
+        "title": "Oppo F19 Pro Plus",
+        "description": "The Oppo F19 Pro Plus is a feature-rich smartphone with a focus on camera capabilities. It boasts advanced photography features and a powerful performance for a premium user experience.",
+        "category": "smartphones",
+        "price": 8000000,
+        "stock": 92,
+        "tags": [
+            "smartphones",
+            "oppo"
+        ],
+        "brand": "Oppo",
+        "sku": "H2TTGWXB",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/smartphones/Oppo%20F19%20Pro%20Plus/1.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/Oppo%20F19%20Pro%20Plus/2.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/Oppo%20F19%20Pro%20Plus/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/smartphones/Oppo%20F19%20Pro%20Plus/thumbnail.png",
+        "discountedPrice": 8000000
+    },
+    {
+        "discount": 0,
+        "title": "Oppo K1",
+        "description": "The Oppo K1 series offers a range of smartphones with various features and specifications. Known for their stylish design and reliable performance, the Oppo K1 series caters to diverse user preferences.",
+        "category": "smartphones",
+        "price": 7000000,
+        "stock": 61,
+        "tags": [
+            "smartphones",
+            "oppo"
+        ],
+        "brand": "Oppo",
+        "sku": "ELZ94HM3",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/smartphones/Oppo%20K1/1.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/Oppo%20K1/2.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/Oppo%20K1/3.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/Oppo%20K1/4.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/smartphones/Oppo%20K1/thumbnail.png",
+        "discountedPrice": 7000000
+    },
+    {
+        "discount": 0,
+        "title": "Realme C35",
+        "description": "The Realme C35 is a budget-friendly smartphone with a focus on providing essential features for everyday use. It offers a reliable performance and user-friendly experience.",
+        "category": "smartphones",
+        "price": 7200000,
+        "stock": 81,
+        "tags": [
+            "smartphones",
+            "realme"
+        ],
+        "brand": "Realme",
+        "sku": "25KENV7J",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/smartphones/Realme%20C35/1.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/Realme%20C35/2.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/Realme%20C35/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/smartphones/Realme%20C35/thumbnail.png",
+        "discountedPrice": 7200000
+    },
+    {
+        "discount": 0,
+        "title": "Realme X",
+        "description": "The Realme X is a mid-range smartphone known for its sleek design and impressive display. It offers a good balance of performance and camera capabilities for users seeking a quality device.",
+        "category": "smartphones",
+        "price": 7000000,
+        "stock": 87,
+        "tags": [
+            "smartphones",
+            "realme"
+        ],
+        "brand": "Realme",
+        "sku": "5E11C5C4",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/smartphones/Realme%20X/1.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/Realme%20X/2.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/Realme%20X/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/smartphones/Realme%20X/thumbnail.png",
+        "discountedPrice": 292.82
+    },
+    {
+        "discount": 0,
+        "title": "Realme XT",
+        "description": "The Realme XT is a feature-rich smartphone with a focus on camera technology. It comes equipped with advanced camera sensors, delivering high-quality photos and videos for photography enthusiasts.",
+        "category": "smartphones",
+        "price": 349.99,
+        "stock": 53,
+        "tags": [
+            "smartphones",
+            "realme"
+        ],
+        "brand": "Realme",
+        "sku": "GHDMRAP2",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/smartphones/Realme%20XT/1.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/Realme%20XT/2.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/Realme%20XT/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/smartphones/Realme%20XT/thumbnail.png",
+        "discountedPrice": 7000000
+    },
+    {
+        "discount": 0,
+        "title": "Samsung Galaxy S7",
+        "description": "The Samsung Galaxy S7 is a flagship smartphone known for its sleek design and advanced features. It features a high-resolution display, powerful camera, and robust performance.",
+        "category": "smartphones",
+        "price": 11000000,
+        "stock": 55,
+        "tags": [
+            "smartphones",
+            "samsung galaxy"
+        ],
+        "brand": "Samsung",
+        "sku": "VZF4Z58Z",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/smartphones/Samsung%20Galaxy%20S7/1.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/Samsung%20Galaxy%20S7/2.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/Samsung%20Galaxy%20S7/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/smartphones/Samsung%20Galaxy%20S7/thumbnail.png",
+        "discountedPrice": 11000000
+    },
+    {
+        "discount": 0,
+        "title": "Samsung Galaxy S8",
+        "description": "The Samsung Galaxy S8 is a premium smartphone with an Infinity Display, offering a stunning visual experience. It boasts advanced camera capabilities and cutting-edge technology.",
+        "category": "smartphones",
+        "price": 11000000,
+        "stock": 75,
+        "tags": [
+            "smartphones",
+            "samsung galaxy"
+        ],
+        "brand": "Samsung",
+        "sku": "GLXQQKBF",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/smartphones/Samsung%20Galaxy%20S8/1.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/Samsung%20Galaxy%20S8/2.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/Samsung%20Galaxy%20S8/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/smartphones/Samsung%20Galaxy%20S8/thumbnail.png",
+        "discountedPrice": 11000000
+    },
+    {
+        "discount": 0,
+        "title": "Samsung Galaxy S10",
+        "description": "The Samsung Galaxy S10 is a flagship device featuring a dynamic AMOLED display, versatile camera system, and powerful performance. It represents innovation and excellence in smartphone technology.",
+        "category": "smartphones",
+        "price": 12000000,
+        "stock": 40,
+        "tags": [
+            "smartphones",
+            "samsung galaxy"
+        ],
+        "brand": "Samsung",
+        "sku": "5GJFL98I",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/smartphones/Samsung%20Galaxy%20S10/1.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/Samsung%20Galaxy%20S10/2.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/Samsung%20Galaxy%20S10/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/smartphones/Samsung%20Galaxy%20S10/thumbnail.png",
+        "discountedPrice": 12000000
+    },
+    {
+        "discount": 0,
+        "title": "Vivo S1",
+        "description": "The Vivo S1 is a stylish and mid-range smartphone offering a blend of design and performance. It features a vibrant display, capable camera system, and reliable functionality.",
+        "category": "smartphones",
+        "price": 14000000,
+        "stock": 13,
+        "tags": [
+            "smartphones",
+            "vivo"
+        ],
+        "brand": "Vivo",
+        "sku": "BG6974E7",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/smartphones/Vivo%20S1/1.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/Vivo%20S1/2.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/Vivo%20S1/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/smartphones/Vivo%20S1/thumbnail.png",
+        "discountedPrice": 14000000
+    },
+    {
+        "discount": 0,
+        "title": "Vivo V9",
+        "description": "The Vivo V9 is a smartphone known for its sleek design and emphasis on capturing high-quality selfies. It features a notch display, dual-camera setup, and a modern design.",
+        "category": "smartphones",
+        "price": 14000000,
+        "stock": 19,
+        "tags": [
+            "smartphones",
+            "vivo"
+        ],
+        "brand": "Vivo",
+        "sku": "N9WFE2WH",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/smartphones/Vivo%20V9/1.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/Vivo%20V9/2.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/Vivo%20V9/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/smartphones/Vivo%20V9/thumbnail.png",
+        "discountedPrice": 14000000
+    },
+    {
+        "discount": 0,
+        "title": "Vivo X21",
+        "description": "The Vivo X21 is a premium smartphone with a focus on cutting-edge technology. It features an in-display fingerprint sensor, a high-resolution display, and advanced camera capabilities.",
+        "category": "smartphones",
+        "price": 14500000,
+        "stock": 0,
+        "tags": [
+            "smartphones",
+            "vivo"
+        ],
+        "brand": "Vivo",
+        "sku": "KSF00BOC",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/smartphones/Vivo%20X21/1.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/Vivo%20X21/2.png",
+            "https://cdn.dummyjson.com/products/images/smartphones/Vivo%20X21/3.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/smartphones/Vivo%20X21/thumbnail.png",
+        "discountedPrice": 14500000
+    },
+    {
+        "discount": 0,
+        "title": "iPad Mini 2021 Starlight",
+        "description": "The iPad Mini 2021 in Starlight is a compact and powerful tablet from Apple. Featuring a stunning Retina display, powerful A-series chip, and a sleek design, it offers a premium tablet experience.",
+        "category": "tablets",
+        "price": 16550000,
+        "stock": 32,
+        "tags": [
+            "electronics",
+            "tablets"
+        ],
+        "brand": "Apple",
+        "sku": "L5CSWLNS",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/tablets/iPad%20Mini%202021%20Starlight/1.png",
+            "https://cdn.dummyjson.com/products/images/tablets/iPad%20Mini%202021%20Starlight/2.png",
+            "https://cdn.dummyjson.com/products/images/tablets/iPad%20Mini%202021%20Starlight/3.png",
+            "https://cdn.dummyjson.com/products/images/tablets/iPad%20Mini%202021%20Starlight/4.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/tablets/iPad%20Mini%202021%20Starlight/thumbnail.png",
+        "discountedPrice": 16550000
+    },
+    {
+        "discount": 0,
+        "title": "Samsung Galaxy Tab S8 Plus Grey",
+        "description": "The Samsung Galaxy Tab S8 Plus in Grey is a high-performance Android tablet by Samsung. With a large AMOLED display, powerful processor, and S Pen support, it's ideal for productivity and entertainment.",
+        "category": "tablets",
+        "price": 12550000,
+        "stock": 76,
+        "tags": [
+            "electronics",
+            "tablets"
+        ],
+        "brand": "Samsung",
+        "sku": "1SIVLPFN",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/tablets/Samsung%20Galaxy%20Tab%20S8%20Plus%20Grey/1.png",
+            "https://cdn.dummyjson.com/products/images/tablets/Samsung%20Galaxy%20Tab%20S8%20Plus%20Grey/2.png",
+            "https://cdn.dummyjson.com/products/images/tablets/Samsung%20Galaxy%20Tab%20S8%20Plus%20Grey/3.png",
+            "https://cdn.dummyjson.com/products/images/tablets/Samsung%20Galaxy%20Tab%20S8%20Plus%20Grey/4.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/tablets/Samsung%20Galaxy%20Tab%20S8%20Plus%20Grey/thumbnail.png",
+        "discountedPrice": 12550000
+    },
+    {
+        "discount": 0,
+        "title": "Samsung Galaxy Tab White",
+        "description": "The Samsung Galaxy Tab in White is a sleek and versatile Android tablet. With a vibrant display, long-lasting battery, and a range of features, it offers a great user experience for various tasks.",
+        "category": "tablets",
+        "price": 12550000,
+        "stock": 0,
+        "tags": [
+            "electronics",
+            "tablets"
+        ],
+        "brand": "Samsung",
+        "sku": "AKJPAPFO",
+        "images": [
+            "https://cdn.dummyjson.com/products/images/tablets/Samsung%20Galaxy%20Tab%20White/1.png",
+            "https://cdn.dummyjson.com/products/images/tablets/Samsung%20Galaxy%20Tab%20White/2.png",
+            "https://cdn.dummyjson.com/products/images/tablets/Samsung%20Galaxy%20Tab%20White/3.png",
+            "https://cdn.dummyjson.com/products/images/tablets/Samsung%20Galaxy%20Tab%20White/4.png"
+        ],
+        "thumbnail": "https://cdn.dummyjson.com/products/images/tablets/Samsung%20Galaxy%20Tab%20White/thumbnail.png",
+        "discountedPrice": 12550000
+    }
+]

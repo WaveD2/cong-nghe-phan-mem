@@ -22,7 +22,10 @@ const apiRoot = process.env.API_ROOT || "/api/order-service";
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:514',
-  'https://cnpm-gamma.vercel.app'
+  'https://cnpm-gamma.vercel.app',
+  'https://cnpm-waved2s-projects.vercel.app',
+  'https://cnpm-waved2s-projects.vercel.app/',
+  'https://cnpm-gamma.vercel.app/'
 ];
 
 app.use(cors({
@@ -45,9 +48,9 @@ app.use(apiRoot, orderRoute);
 app.use(errorHandler);  
 
 ( async ()=>{
-  await Product.deleteMany({})
-  await Order.deleteMany({})
-  await Cart.deleteMany({})
+  // await Product.deleteMany({})
+  // await Order.deleteMany({})
+  // await Cart.deleteMany({})
 })()
 
 process.on("unhandledRejection", (reason, promise) => {

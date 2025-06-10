@@ -128,7 +128,7 @@ const ProductDetails = () => {
                     {formatCurrencyVND(relatedProduct.price)}
                   </p>
                   <a
-                    href={`/product/${relatedProduct._id}`}
+                    href={`/store/${relatedProduct._id}`}
                     className="text-blue-600 hover:underline text-sm font-medium"
                   >
                     Xem chi tiết

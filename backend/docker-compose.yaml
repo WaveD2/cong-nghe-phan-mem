@@ -9,6 +9,8 @@ services:
       - ALLOW_ANONYMOUS_LOGIN=yes
     networks:
       - ecommerce_network
+    volumes:
+      - zookeeper_data:/bitnami/zookeeper/data
     healthcheck:
       test: [ "CMD", "echo", "ruok", "|", "nc", "-z", "localhost", "2181" ]
       interval: 10s
@@ -33,6 +35,8 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     volumes:
       - kafka_data:/var/lib/kafka/data
+    command: >
+      bash -c "rm -f /var/lib/kafka/data/meta.properties && /etc/confluent/docker/run"
     networks:
       - ecommerce_network
     healthcheck:
@@ -234,3 +238,4 @@ volumes:
   order-mongodb-data:
   redis_data:
   kafka_data:
+  zookeeper_data:

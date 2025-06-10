@@ -40,7 +40,7 @@ export const CustomTable = ({ columns, data, pagination, onPageChange, onChangeL
         transition={{ duration: 0.4 }}
         className="w-full"
       >
-        <div className="overflow-y-auto max-h-[500px] custom-scrollbar">
+        <div className="overflow-y-auto min-h-[500px] max-h-[500px] custom-scrollbar">
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-gray-200 border-collapse rounded-tr-md">

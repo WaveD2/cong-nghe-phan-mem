@@ -18,23 +18,25 @@ const app = express();
 const PORT = process.env.PORT || 7003;
 const apiRoot = process.env.API_ROOT || "/api/cart-service";
 
-
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:514',
-  'https://cnpm-gamma.vercel.app'
+  'https://cnpm-gamma.vercel.app',
+  'https://cnpm-waved2s-projects.vercel.app',
+  'https://cnpm-waved2s-projects.vercel.app/',
+  'https://cnpm-gamma.vercel.app/'
 ];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Không cho phép CORS từ origin này: ' + origin));
-    }
-  },
-  credentials: true
-}));
+  app.use(cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Không cho phép CORS từ origin này: ' + origin));
+      }
+    },
+    credentials: true
+  }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
